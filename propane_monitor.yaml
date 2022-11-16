@@ -5,16 +5,11 @@ substitutions:
   # Project Specific Substitutions
   sub_text_devicename:                        "Propane Monitor" 
   sub_esphome_name:                           propane_monitor
-  #sub_wifi_manual_ip_static_ip:               !secret esp_propane_sensor_ip
   # Network and service related substitutions
   sub_wifi_ssid1:                             !secret esp_wifi_ssid1
   sub_wifi_password1:                         !secret esp_wifi_pass1
-  sub_wifi_manual_ip_subnet:                  !secret esp_ip_subnet
-  sub_wifi_manual_ip_gateway:                 !secret esp_ip_gateway
-  sub_wifi_manual_ip_dns1:                    !secret esp_ip_dns
   # Fast connect is only available when a single SSID is used.  True or False
   sub_wifi_fast_connect:                      "true"                  
-  sub_wifi_domain:                            !secret esp_ip_domain
   sub_wifi_ap_password:                       !secret esp_ap_psk
   sub_web_server_port:                        !secret esp_http_server_port
   sub_web_server_auth_user:                   !secret esp_http_user
@@ -72,8 +67,6 @@ wifi:
   networks: 
     - ssid:                                   ${sub_wifi_ssid1}
       password:                               ${sub_wifi_password1}
-  fast_connect:                               ${sub_wifi_fast_connect}
-  domain:                                     ${sub_wifi_domain}
   ap:                                         # Enable fallback hotspot
     ssid:                                     ${sub_text_devicename} Hotspot
     password:                                 ${sub_wifi_ap_password}
