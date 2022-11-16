@@ -1,0 +1,1024 @@
+#*****************************************************************************#
+substitutions:
+  sub_code_version:                           "2022.11.01"
+  sub_hide_dev:                               "false"
+  # Project Specific Substitutions
+  sub_text_devicename:                        "Propane Monitor" 
+  sub_esphome_name:                           propane_monitor
+  #sub_wifi_manual_ip_static_ip:               !secret esp_propane_sensor_ip
+  # Network and service related substitutions
+  sub_wifi_ssid1:                             !secret esp_wifi_ssid1
+  sub_wifi_password1:                         !secret esp_wifi_pass1
+  sub_wifi_manual_ip_subnet:                  !secret esp_ip_subnet
+  sub_wifi_manual_ip_gateway:                 !secret esp_ip_gateway
+  sub_wifi_manual_ip_dns1:                    !secret esp_ip_dns
+  # Fast connect is only available when a single SSID is used.  True or False
+  sub_wifi_fast_connect:                      "true"                  
+  sub_wifi_domain:                            !secret esp_ip_domain
+  sub_wifi_ap_password:                       !secret esp_ap_psk
+  sub_web_server_port:                        !secret esp_http_server_port
+  sub_web_server_auth_user:                   !secret esp_http_user
+  sub_web_server_auth_password:               !secret esp_http_pass
+  sub_api_password:                           !secret esp_api_pass
+  sub_ota_safe_mode:                          "true"
+  sub_ota_password:                           !secret esp_ota_pass
+
+  sub_sensor1_name:                           "Sensor 1"
+  sub_sensor1_tank_type:                      "30LB_V"
+  sub_sensor1_mac:                            "F6:CC:9C:06:F6:F9"
+  sub_sensor1_id:                             "tank1"
+
+  sub_sensor2_name:                           "Sensor 2"
+  sub_sensor2_tank_type:                      "30LB_V"
+  sub_sensor2_mac:                            "CC:9C:31:1E:75:8D"
+  sub_sensor2_id:                             "tank2"
+
+  ## Used for the configuration of the display screens
+  sub_page1_title:                            "Propane Levels"
+  sub_page2_title:                            "Sensor Conditions"
+#*****************************************************************************#
+esphome:
+  name:                                       ${sub_esphome_name}
+  includes:
+    - tdisplays3/tft_espi_display.h
+    - tdisplays3/Free_Fonts.h
+  libraries:
+    - SPI
+    - FS
+    - SPIFFS
+    - tdisplays3=https://github.com/landonr/lilygo-tdisplays3-esphome.git
+  on_boot:                          
+    priority:                                 600
+    then:
+      script.execute:                         on_boot
+  # ---------------------------------------------------------------------------
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  framework:
+    type: arduino
+    version: 2.0.3
+    platform_version: 5.0.0
+#*****************************************************************************#
+custom_component:
+  lambda: |-
+      App.register_component(displayControllerComponent);
+      return {displayControllerComponent};
+  id: displayComponent
+#*****************************************************************************#
+logger:
+#*****************************************************************************#
+wifi:
+  networks: 
+    - ssid:                                   ${sub_wifi_ssid1}
+      password:                               ${sub_wifi_password1}
+  fast_connect:                               ${sub_wifi_fast_connect}
+  domain:                                     ${sub_wifi_domain}
+  ap:                                         # Enable fallback hotspot
+    ssid:                                     ${sub_text_devicename} Hotspot
+    password:                                 ${sub_wifi_ap_password}
+#*****************************************************************************#
+captive_portal:
+#*****************************************************************************#
+ota:
+  safe_mode:                                  ${sub_ota_safe_mode}
+  password:                                   ${sub_ota_password}
+#*****************************************************************************#
+api:
+  password:                                   ${sub_api_password}
+  reboot_timeout:                             0s
+#*****************************************************************************#
+web_server: 
+  port:                                       ${sub_web_server_port}
+  auth:
+    username:                                 ${sub_web_server_auth_user}
+    password:                                 ${sub_web_server_auth_password}
+#*****************************************************************************#
+esp32_ble_tracker:
+#*****************************************************************************#
+interval:
+  - interval:                                 5s
+    then:
+      - script.execute:                       errorCheck
+  # ---------------------------------------------------------------------------
+  - interval:                                 10s
+    then:
+      - script.execute:                       pageRefresh
+      - if:
+          condition:
+            switch.is_on:                       refreshEnabled
+          then:
+            - number.increment:                 pageCurrent
+
+#*****************************************************************************#
+# Binary Sensors                    
+binary_sensor:
+  - platform:                                 template
+    id:                                       sensor1HasError
+    name:                                     (DEV) Error - Sensor 1
+    internal:                                 ${sub_hide_dev}
+
+  - platform:                                 template
+    id:                                       sensor1BattError
+    name:                                     (DEV) Error - Sensor 1 Battery
+    internal:                                 ${sub_hide_dev}
+
+  - platform:                                 template
+    id:                                       sensor1BTSignalError
+    name:                                     (DEV) Error - Sensor 1 BT Signal
+    internal:                                 ${sub_hide_dev}
+
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    id:                                       sensor2HasError
+    name:                                     (DEV) Error - Sensor 2
+    internal:                                 ${sub_hide_dev}
+
+  - platform:                                 template
+    id:                                       sensor2BattError
+    name:                                     (DEV) Error - Sensor 2 Battery
+    internal:                                 ${sub_hide_dev}
+
+  - platform:                                 template
+    id:                                       sensor2BTSignalError
+    name:                                     (DEV) Error - Sensor 2 BT Signal
+    internal:                                 ${sub_hide_dev}
+  
+  # ---------------------------------------------------------------------------
+  - platform:                                 gpio
+    pin:
+      number:                                 GPIO0
+      inverted:                               true
+    name:                                     ${sub_text_devicename} Page Next
+    id:                                       pageNext
+    internal:                                 true
+    on_click:
+    - min_length:                             50ms
+      max_length:                             350ms
+      then:
+        - script.execute:                     screenTimer
+        - switch.turn_on:                     backlight
+        - switch.turn_off:                    refreshEnabled
+        - number.increment:                   pageCurrent
+        - script.execute:                     pageRefresh
+    - min_length:                             1000ms
+      max_length:                             2000ms
+      then:
+        - script.execute:                     screenTimer
+        - switch.toggle:                      refreshEnabled
+        - switch.turn_on:                     backlight 
+        - script.stop:                        pageRefresh
+        - script.execute:                     displayRotationStatus
+        - delay:                              3s
+        - script.execute:                     pageRefresh
+  # ---------------------------------------------------------------------------
+  - platform:                                 gpio
+    pin:
+      number:                                 GPIO14
+      inverted:                               true
+    name:                                     ${sub_text_devicename} Screen
+    id:                                       screen
+    internal:                                 true
+    on_click:
+    - min_length:                             50ms
+      max_length:                             350ms
+      then:
+        - script.execute:                     screenTimer
+        - switch.toggle:                      backlight
+    - min_length:                             1000ms
+      max_length:                             2000ms
+      then:
+        - script.execute:                     screenTimer
+        - switch.turn_on:                     backlight
+        - switch.toggle:                      screensaver
+        - switch.turn_off:                    refreshEnabled
+        - script.execute:                     displayScreensaverStatus
+        - delay:                              3s
+        - switch.turn_on:                     refreshEnabled
+
+#*****************************************************************************#
+# Buttons 
+button:
+  - platform:                                 template
+    name:                                     ${sub_text_devicename} Device Restart
+    id:                                       reboot
+    on_press:
+      then:
+        - switch.toggle:                      platform_restart
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Page - Refresh Current
+    id:                                       rotatePage
+    internal:                                 ${sub_hide_dev}
+    on_press:
+      then:
+        - script.execute:                     pageRefresh
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Page - Show Page 1
+    internal:                                 ${sub_hide_dev}
+    on_press:
+      then:
+        - script.execute:                     pageBuild1
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Page - Show Page 2
+    internal:                                 ${sub_hide_dev}
+    on_press:
+      then:
+        - script.execute:                     pageBuild2
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Page - Show Page 3
+    internal:                                 ${sub_hide_dev}
+    on_press:
+      then:
+        - script.execute:                     pageBuild3
+    # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Page - Show Scroll Status
+    internal:                                 ${sub_hide_dev}
+    on_press:
+      then:
+        - script.execute:                     displayRotationStatus
+        - number.increment:                   pageCurrent
+
+#*****************************************************************************#
+# Numbers 
+number:
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Current Page
+    id:                                       pageCurrent
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            0
+    min_value:                                0
+    max_value:                                2
+    step:                                     1
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Sensor 1 Level
+    id:                                       lp1Level
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            75
+    min_value:                                -10
+    max_value:                                100
+    step:                                     1
+    on_value:
+      then:
+        - lambda: |-
+            id(sensor1LPLevel).publish_state(id(lp1Level).state);
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Sensor 2 Level
+    id:                                       lp2Level
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            75
+    min_value:                                -10
+    max_value:                                100
+    step:                                     1
+    on_value:
+      then:
+        - lambda: |-
+            id(sensor2LPLevel).publish_state(id(lp2Level).state);
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Sensor 1 Battery
+    id:                                       lp1Batt
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            51
+    min_value:                                0
+    max_value:                                100
+    step:                                     1
+    on_value:
+      then:
+        - lambda: |-
+            id(sensor1Battery).publish_state(id(lp1Batt).state);
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Sensor 2 Battery
+    id:                                       lp2Batt
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            51
+    min_value:                                -10
+    max_value:                                100
+    step:                                     1
+    on_value:
+      then:
+        - lambda: |-
+            id(sensor2Battery).publish_state(id(lp2Batt).state);
+
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Sensor 1 BT Signal
+    id:                                       lp1BT
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            -50
+    min_value:                                -100
+    max_value:                                1
+    step:                                     1
+    on_value:
+      then:
+        - lambda: |-
+            id(sensor1BTSignal).publish_state(id(lp1BT).state);
+    # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                     (DEV) Sensor 2 BT Signal
+    id:                                       lp2BT
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            -50
+    min_value:                                -100
+    max_value:                                1
+    step:                                     1
+    on_value:
+      then:
+        - lambda: |-
+            id(sensor2BTSignal).publish_state(id(lp2BT).state);
+
+#*****************************************************************************#
+# Sensors
+sensor:
+# ---------------------------------------------------------------------------
+  - platform:                                 uptime
+    id:                                       uptime_s
+    update_interval:                          10s
+    internal:                                 true
+  # ---------------------------------------------------------------------------
+  - platform:                                 wifi_signal
+    name:                                     ${sub_text_devicename} WiFi Signal
+    id:                                       ${sub_esphome_name}_wifi_signal
+    entity_category:                          diagnostic
+    update_interval:                          30s
+  # ---------------------------------------------------------------------------
+  - platform:                                 mopeka_pro_check
+    mac_address:                              ${sub_sensor1_mac}
+    tank_type:                                ${sub_sensor1_tank_type}
+    temperature:
+      name:                                   ${sub_text_devicename} ${sub_sensor1_name} Temp
+      id:                                     sensor1Temp
+    level:
+      name:                                   ${sub_text_devicename} ${sub_sensor1_name} Level
+      id:                                     sensor1LPLevel
+      on_value:
+        then:
+          - sensor.template.publish:
+              id:                             sensor1LvlBGColor
+              state:    !lambda |- 
+                        float checkValue =        id(sensor1LPLevel).state;
+                        float redThreshold =      20;
+                        float orangeThreshold =   40;
+                        float yellowThreshold =   60;
+                        float greenThreshold =    80;
+
+                        if ((checkValue > redThreshold) && (checkValue <= orangeThreshold)){
+                          return displayControllerComponent->tft.color565(255, 180, 0);           // orange
+                        } else if ((checkValue > orangeThreshold) && (checkValue <= yellowThreshold)){
+                          return displayControllerComponent->tft.color565(255, 255, 0);           // yellow
+                          } else if ((checkValue > yellowThreshold) && (checkValue <= greenThreshold)){
+                          return displayControllerComponent->tft.color565(180, 255, 0);           // greenyellow
+                        } else if ((checkValue > greenThreshold) && (checkValue <= 100)){
+                          return displayControllerComponent->tft.color565(0, 255, 0);             // green
+                        } else {
+                            return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                        } 
+    battery_level:
+      name:                                   ${sub_text_devicename} ${sub_sensor1_name} Battery
+      id:                                     sensor1Battery
+      on_value:
+        then:
+          - sensor.template.publish:
+              id:                             sensor1BattBGColor
+              state:    !lambda |- 
+                        float checkValue = id(sensor1Battery).state;
+                        float greenThreshold = 50;
+
+                        if ((checkValue >= greenThreshold)) {
+                            id(sensor1BattError).publish_state(false);
+                            return displayControllerComponent->tft.color565(0, 0, 0);             // black
+                        } else {
+                            id(sensor1BattError).publish_state(true);
+                            return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                        } 
+  # ---------------------------------------------------------------------------
+  - platform:                                 mopeka_pro_check
+    mac_address:                              ${sub_sensor2_mac}
+    tank_type:                                ${sub_sensor2_tank_type}
+    temperature:
+      name:                                   ${sub_text_devicename} ${sub_sensor2_name} Temp
+      id:                                     sensor2Temp
+    level:
+      name:                                   ${sub_text_devicename} ${sub_sensor2_name} Level
+      id:                                     sensor2LPLevel
+      on_value:
+        then:
+          - sensor.template.publish:
+              id:     sensor2LvlBGColor
+              state:    !lambda |- 
+                          float checkValue = id(sensor2LPLevel).state;
+                          float redThreshold = 20;
+                          float orangeThreshold = 40;
+                          float yellowThreshold = 60;
+                          float greenThreshold = 80;
+
+                          if ((checkValue > redThreshold) && (checkValue <= orangeThreshold)){
+                            return displayControllerComponent->tft.color565(255, 180, 0);           // orange
+                          } else if ((checkValue > orangeThreshold) && (checkValue <= yellowThreshold)){
+                            return displayControllerComponent->tft.color565(255, 255, 0);           // yellow
+                            } else if ((checkValue > yellowThreshold) && (checkValue <= greenThreshold)){
+                            return displayControllerComponent->tft.color565(180, 255, 0);           // greenyellow
+                          } else if ((checkValue > greenThreshold) && (checkValue <= 100)){
+                            return displayControllerComponent->tft.color565(0, 255, 0);             // green
+                          } else {
+                              return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                          } 
+    battery_level:
+      name:                                   ${sub_text_devicename} ${sub_sensor2_name} Battery
+      id:                                     sensor2Battery
+      on_value:
+        then:
+          - sensor.template.publish:
+              id:     sensor2BattBGColor
+              state:    !lambda |- 
+                float checkValue = id(sensor2Battery).state;
+                float greenThreshold = 50;
+
+                if ((checkValue >= greenThreshold)) {
+                    id(sensor2BattError).publish_state(false);
+                    return displayControllerComponent->tft.color565(0, 0, 0);             // black
+                } else {
+                    id(sensor2BattError).publish_state(true);
+                    return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                } 
+          - script.execute:                     errorCheck
+  # ---------------------------------------------------------------------------
+  - platform:                                 ble_rssi
+    mac_address:                              ${sub_sensor1_mac}
+    name:                                     ${sub_text_devicename} ${sub_sensor1_name} BLE RSSI
+    id:                                       sensor1BTSignal
+    entity_category:                          diagnostic
+    icon:                                     mdi:signal
+    on_value:
+      then:
+        - sensor.template.publish:
+            id:     sensor1BTSignalBGColor
+            state:    !lambda |- 
+                        float checkValue = id(sensor1BTSignal).state;
+                        float redThreshold = -80;
+
+                        if ((checkValue > redThreshold)) {
+                            id(sensor1BTSignalError).publish_state(false);
+                            return displayControllerComponent->tft.color565(0, 0, 0);             // black
+                        } else {
+                            id(sensor1BTSignalError).publish_state(true);
+                            return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                        } 
+        - script.execute:                     errorCheck
+  # ---------------------------------------------------------------------------
+  - platform:                                 ble_rssi
+    mac_address:                              ${sub_sensor2_mac}
+    name:                                     ${sub_text_devicename} ${sub_sensor2_name} BLE RSSI
+    id:                                       sensor2BTSignal
+    entity_category:                          diagnostic
+    icon:                                     mdi:signal
+    on_value:
+      then:
+        - sensor.template.publish:
+            id:     sensor2BTSignalBGColor
+            state:    !lambda |- 
+                        float checkValue = id(sensor2BTSignal).state;
+                        float redThreshold = -80;
+
+                        if ((checkValue > redThreshold)) {
+                            id(sensor2BTSignalError).publish_state(false);
+                            return displayControllerComponent->tft.color565(0, 0, 0);             // black
+                        } else {
+                            id(sensor2BTSignalError).publish_state(true);
+                            return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                        } 
+        - script.execute:                     errorCheck
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                       (DEV) Display - Sensor 1 LP Level Color
+    id:                                     sensor1LvlBGColor
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------  
+  - platform:                                 template
+    name:                                       (DEV) Display - Sensor 2 LP Level Color
+    id:                                     sensor1BattBGColor
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------   
+  - platform:                                 template
+    name:                                       (DEV)  Display - Sensor 1 BT Level Color
+    id:                                     sensor1BTSignalBGColor
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------  
+  - platform:                                 template
+    name:                                       (DEV)  Display - Sensor 2 BT Level Color
+    id:                                     sensor2LvlBGColor
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------  
+  - platform:                                 template
+    name:                                       (DEV)  Display - Sensor 1 Battery Level Color
+    id:                                     sensor2BattBGColor
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------
+  - platform:                                 template
+    name:                                       (DEV)  Display - Sensor 2 Battery Level Color
+    id:                                     sensor2BTSignalBGColor
+    internal:                                 ${sub_hide_dev}
+
+
+#*****************************************************************************# 
+# Scripts 
+script:
+  - id:                                       on_boot
+    then:
+      - logger.log:                           "System bootup underway..."
+      - switch.turn_on:                       backlight
+      - switch.turn_on:                       refreshEnabled
+      - script.execute:                       screenTimer
+      - text_sensor.template.publish:
+          id:     version
+          state: ${sub_code_version}
+      - lambda: |-
+                  displayControllerComponent->tft.fillScreen(TFT_BLACK);
+                  id(sensor1HasError).publish_state(false);
+                  id(sensor2HasError).publish_state(false);
+  # ---------------------------------------------------------------------------
+  - id:                                       screenTimer
+    mode:                                     restart
+    then:
+      - logger.log:                           "Screen timeout script called"
+      - if:
+          condition:                 
+            switch.is_on:                     screensaver
+          then:
+            - delay:                          60s
+            - logger.log:                     "Screen timeout reached"
+            - switch.turn_off:                backlight
+  # ---------------------------------------------------------------------------
+  - id:                                       errorCheck
+    mode:                                     restart
+    then:
+      - lambda: |-
+                  if (id(sensor1BattError).state == true || id(sensor1BTSignalError).state == true) {
+                      id(sensor1HasError).publish_state(true);
+                  } else {
+                      id(sensor1HasError).publish_state(false);
+                  };
+                  if (id(sensor2BattError).state == true || id(sensor2BTSignalError).state == true) {
+                      id(sensor2HasError).publish_state(true);
+                  } else {
+                      id(sensor2HasError).publish_state(false);
+                  };
+
+  # --------------------------------------------------------------------------- 
+  - id:                                       pageRefresh
+    mode:                                     restart
+    then:
+      - lambda: |-
+          static script::Script *scripts[] = {id(pageBuild1), id(pageBuild2), id(pageBuild3)};
+          int current_page = id(pageCurrent).state;
+          scripts[current_page]->execute();
+  # ---------------------------------------------------------------------------
+  - id:                                       pageBuild1
+    mode:                                     restart
+    then:
+      - lambda: |-
+          int xWidth =              displayControllerComponent->tft.width();
+          int yHeight =             displayControllerComponent->tft.height();
+          int xCenter =             xWidth / 2;
+          int yHLine =              34;                                                    // Vertical position of horizontal line
+          int yColHeaderCenter =    yHLine + 15;
+          
+          //int xCenter =  160;
+          int xLoffset = 10;
+          int xRoffset = 310;
+          int xCol1Center = 80;
+          int xCol2Center = 240;
+          int xCRoffset = xCenter + 10;
+          int xCLoffset = xCenter - 10;
+          int colYOffset = 40; 
+
+          //**********************************************************************************
+          // Used for testing
+          //float level1 = id(lp1Level).state;
+          //float level2 = id(lp2Level).state;
+          float level1 = id(sensor1LPLevel).state;
+          float level2 = id(sensor2LPLevel).state;
+         
+          //**********************************************************************************
+          //  Build common page layout - two rows
+              displayControllerComponent->tft.fillScreen(TFT_BLACK);
+              displayControllerComponent->tft.setRotation(1);
+              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+              displayControllerComponent->tft.drawRoundRect(0, 0, xWidth, yHeight, 10, TFT_RED);
+              displayControllerComponent->tft.drawFastHLine(0, yHLine, xWidth, TFT_RED);
+              displayControllerComponent->tft.setFreeFont(FMB12);
+              displayControllerComponent->tft.setTextDatum(MC_DATUM);
+
+          // *** If a 2 column page, draw vertical line ***
+              displayControllerComponent->tft.drawFastVLine(160, 35, 135, TFT_RED);   
+
+          // Display page1 title
+            displayControllerComponent->tft.drawString("${sub_page1_title}",xCenter, yHLine / 2);
+
+          // If there is an error on sensor 1, display error indicator before heading
+            if (id(sensor1HasError).state == true) {
+              displayControllerComponent->tft.setFreeFont(FSB9);
+              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_RED);
+              displayControllerComponent->tft.fillCircle(xCLoffset - 5,colYOffset +10,10, TFT_RED);
+              displayControllerComponent->tft.drawString("!",xCLoffset - 5,colYOffset +10); 
+              displayControllerComponent->tft.setFreeFont(FMB12);
+              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            }
+            displayControllerComponent->tft.drawString("${sub_sensor1_name}",xCol1Center ,yColHeaderCenter);
+
+          // If there is an error on sensor 2, display error indicator before heading
+            if (id(sensor2HasError).state == true) {
+              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_RED);
+              displayControllerComponent->tft.fillCircle(xRoffset - 5,colYOffset +10,10, TFT_RED);
+              displayControllerComponent->tft.setFreeFont(FSB9);
+              displayControllerComponent->tft.drawString("!",xRoffset - 5,colYOffset +10); 
+              displayControllerComponent->tft.setFreeFont(FMB12);
+            }
+            displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            displayControllerComponent->tft.drawString("${sub_sensor2_name}",xCol2Center,yColHeaderCenter); 
+
+          // Build the Col1 Sensor background color
+              displayControllerComponent->tft.setFreeFont(FSB24);
+              displayControllerComponent->tft.setTextColor(TFT_BLACK, id(sensor1LvlBGColor).state);
+              displayControllerComponent->tft.fillRoundRect(xLoffset + 5, colYOffset + 30, 126, 90, 10, id(sensor1LvlBGColor).state);
+
+          // Display sensor 1 level value
+              displayControllerComponent->tft.setTextDatum(ML_DATUM);
+              displayControllerComponent->tft.drawString("%", xCol1Center + 15, 110);   
+              displayControllerComponent->tft.setTextDatum(MR_DATUM); 
+              if (level1 <= 100 && level1 >= 0) {
+                displayControllerComponent->tft.drawFloat(level1,0, xCol1Center +14, 110);
+              } else {
+                displayControllerComponent->tft.drawString("--",  xCol1Center +14, 110);
+              }
+
+          // Build the Col2 Sensor background color
+            displayControllerComponent->tft.setFreeFont(FSB24);
+            displayControllerComponent->tft.setTextColor(TFT_BLACK, id(sensor2LvlBGColor).state);
+            displayControllerComponent->tft.fillRoundRect(xCRoffset + 5, colYOffset + 30, 126,  90, 10, id(sensor2LvlBGColor).state);
+
+          // Display sensor 1 level value
+            displayControllerComponent->tft.setTextDatum(ML_DATUM);  
+            displayControllerComponent->tft.drawString("%", xCol2Center + 15, 110);
+            displayControllerComponent->tft.setTextDatum(MR_DATUM); 
+            if (level2 <= 100 && level2 >= 0) {
+              displayControllerComponent->tft.drawFloat(level2,0, xCol2Center + 14, 110);
+            } else {
+              displayControllerComponent->tft.drawString("--",  xCol2Center + 14, 110);
+            }
+         
+  # ---------------------------------------------------------------------------
+  - id:                                       pageBuild2
+    mode:                                     restart
+    then:
+      - lambda: |-
+          int xWidth =              displayControllerComponent->tft.width();
+          int yHeight =             displayControllerComponent->tft.height();
+          int xCenter =             xWidth / 2;
+          int yHLine =              34;                                                    // Vertical position of horizontal line
+          int yColHeaderCenter =    yHLine + 15;
+
+          int lineYoffset = 20;
+          int yLine1 = 75; // 4
+          int yLine2 = yLine1 + lineYoffset; //93;
+          int yLine3 = yLine2 + lineYoffset; //113;
+          int yLine4 = yLine3 + lineYoffset;//133;
+          int yLine5 = yLine4 + lineYoffset; //153;
+          
+          //int xCenter =  160;
+          int xLoffset = 10;
+          int xRoffset = 310;
+          int xCol1Center = 80;
+          int xCol2Center = 240;
+          int xCRoffset = xCenter + 10;
+          int xCLoffset = xCenter - 10;
+          int colYOffset = 40; 
+
+          
+          float batt1 = id(sensor1Battery).state;
+          float batt2 = id(sensor2Battery).state;
+          float btsignal1 = id(sensor1BTSignal).state;
+          float btsignal2 = id(sensor2BTSignal).state;
+          float level1 = id(sensor1LPLevel).state;
+          float level2 = id(sensor2LPLevel).state;
+
+          //**********************************************************************************
+          // Used for testing
+          //float level1 = id(lp1Level).state;
+          //float level2 = id(lp2Level).state;
+          //float batt1 = id(lp1Batt).state;
+          //float batt2 = id(lp2Batt).state;
+          
+         
+          //**********************************************************************************
+          //  Build common page layout - two rows
+              displayControllerComponent->tft.fillScreen(TFT_BLACK);
+              displayControllerComponent->tft.setRotation(1);
+              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+              displayControllerComponent->tft.drawRoundRect(0, 0, xWidth, yHeight, 10, TFT_RED);
+              displayControllerComponent->tft.drawFastHLine(0, yHLine, xWidth, TFT_RED);
+              displayControllerComponent->tft.setFreeFont(FMB12);
+              displayControllerComponent->tft.setTextDatum(MC_DATUM);
+
+          // *** If a 2 column page, draw vertical line ***
+              displayControllerComponent->tft.drawFastVLine(160, 35, 135, TFT_RED);   
+
+          // Display page2 title
+              displayControllerComponent->tft.drawString("${sub_page2_title}",xCenter, yHLine / 2);       
+
+          // Print page and column headers
+              displayControllerComponent->tft.drawString("${sub_sensor1_name}",xCol1Center ,yColHeaderCenter);
+              displayControllerComponent->tft.drawString("${sub_sensor2_name}",xCol2Center,yColHeaderCenter); 
+
+          // print MAC address under sensor name
+              displayControllerComponent->tft.setFreeFont(FS9);
+              displayControllerComponent->tft.drawString("${sub_sensor1_mac}",xCol1Center, yLine1);
+              displayControllerComponent->tft.drawString("${sub_sensor2_mac}",xCol2Center, yLine1);
+          
+          // Column 1
+            // Attribute Labels - each is inside a black rectangle we can change the color of in case of error
+                displayControllerComponent->tft.setFreeFont(FS9);
+            // Build the column 1 "BT Signal" line
+                displayControllerComponent->tft.setTextDatum(ML_DATUM);
+                displayControllerComponent->tft.setTextColor(TFT_WHITE, id(sensor1BTSignalBGColor).state);
+                displayControllerComponent->tft.fillRoundRect(5, yLine2 - 8, 151, 20, 5, id(sensor1BTSignalBGColor).state);
+                displayControllerComponent->tft.drawString("BT Signal:", xLoffset, yLine2);
+                displayControllerComponent->tft.setTextDatum(MR_DATUM);
+                displayControllerComponent->tft.drawFloat(btsignal1,0, xCLoffset-37, yLine2); 
+                displayControllerComponent->tft.drawString("dBm", xCLoffset, yLine2); 
+                displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);   
+
+            // Build the column 1 "Battery" line
+                displayControllerComponent->tft.setTextDatum(ML_DATUM);
+                displayControllerComponent->tft.setTextColor(TFT_WHITE, id(sensor1BattBGColor).state);
+                displayControllerComponent->tft.fillRoundRect(5, yLine3 - 8, 151, 20, 5, id(sensor1BattBGColor).state); 
+                displayControllerComponent->tft.drawString("Battery:", xLoffset, yLine3);
+                displayControllerComponent->tft.setTextDatum(MR_DATUM);
+                displayControllerComponent->tft.drawFloat(batt1,0, xCLoffset-17, yLine3); 
+                displayControllerComponent->tft.drawString("%", xCLoffset, yLine3); 
+                displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);       
+              
+            // Build the column 1 "Temp" line
+                displayControllerComponent->tft.setTextDatum(ML_DATUM);
+                displayControllerComponent->tft.drawString("Temp:", xLoffset, yLine4);
+                displayControllerComponent->tft.setTextDatum(MR_DATUM);
+                displayControllerComponent->tft.drawString("°F", xCLoffset, yLine4);
+                if ((id(sensor1Temp).state >= -50) && (id(sensor1Temp).state <= 150)) {
+                  displayControllerComponent->tft.drawFloat((id(sensor1Temp).state * (9.0/5.0) + 32.0),0, xCLoffset-17, yLine4);
+                } else {
+                  displayControllerComponent->tft.drawString("--", xCLoffset-17, yLine4);
+                }
+
+              // Build the column 1 "Level" line
+                displayControllerComponent->tft.setTextDatum(ML_DATUM);
+                displayControllerComponent->tft.drawString("Level:", xLoffset, yLine5); 
+                displayControllerComponent->tft.setTextDatum(MR_DATUM);
+                displayControllerComponent->tft.drawString("%", xCLoffset, yLine5);
+                if (level <= 100) {
+                  displayControllerComponent->tft.drawFloat(level1,0, xCLoffset-17, yLine5); 
+                } else  {
+                  displayControllerComponent->tft.drawString("--", xCLoffset-17, yLine5); 
+                }
+
+          // Column 2
+            // Attribute Labels - each is inside a black rectangle we can change the color of in case of error
+                displayControllerComponent->tft.setFreeFont(FS9);
+            // Build the column 2 "BT Signal" line
+                displayControllerComponent->tft.setTextDatum(ML_DATUM);
+                displayControllerComponent->tft.setTextColor(TFT_WHITE, id(sensor2BTSignalBGColor).state);
+                displayControllerComponent->tft.fillRoundRect(xCenter + 5, yLine2 - 8, 151, 20, 5, id(sensor2BTSignalBGColor).state);
+                displayControllerComponent->tft.drawString("BT Signal:", xCRoffset, yLine2);
+                displayControllerComponent->tft.setTextDatum(MR_DATUM);
+                displayControllerComponent->tft.drawFloat(btsignal2,0, xRoffset-37, yLine2); 
+                displayControllerComponent->tft.drawString("dBm", xRoffset, yLine2); 
+                displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK); 
+            
+            // Build the column 2 "Battery" line
+                displayControllerComponent->tft.setTextDatum(ML_DATUM);
+                displayControllerComponent->tft.setTextColor(TFT_WHITE, id(sensor2BattBGColor).state);
+                displayControllerComponent->tft.fillRoundRect(xCenter + 5, yLine3 - 8, 151, 20, 5, id(sensor2BattBGColor).state); 
+                displayControllerComponent->tft.drawString("Battery:", xCRoffset, yLine3);
+                displayControllerComponent->tft.setTextDatum(MR_DATUM);
+                displayControllerComponent->tft.drawString("%", xRoffset, yLine3); 
+                displayControllerComponent->tft.drawFloat(batt2,0, xRoffset-17, yLine3); 
+                displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);  
+
+            // Build the column 2 "Temp" line
+                displayControllerComponent->tft.setTextDatum(ML_DATUM);
+                displayControllerComponent->tft.drawString("Temp:", xCRoffset, yLine4);
+                displayControllerComponent->tft.setTextDatum(MR_DATUM);
+                displayControllerComponent->tft.drawString("°F", xRoffset, yLine4);
+                if ((id(sensor1Temp).state >= -50) && (id(sensor2Temp).state <= 150)) {
+                  displayControllerComponent->tft.drawFloat((id(sensor2Temp).state * (9.0/5.0) + 32.0),0, xRoffset-17, yLine4);
+                } else {
+                  displayControllerComponent->tft.drawString("--", xRoffset-17, yLine4);
+                }
+
+            // Build the column 2 "Level" line
+                displayControllerComponent->tft.setTextDatum(ML_DATUM);
+                displayControllerComponent->tft.drawString("Level:", xCRoffset, yLine5);
+                displayControllerComponent->tft.setTextDatum(MR_DATUM);
+                displayControllerComponent->tft.drawString("%", xRoffset, yLine5);
+                if (level2 <= 100) {
+                  displayControllerComponent->tft.drawFloat(level2,0, xRoffset-17, yLine5); 
+                } else  {
+                  displayControllerComponent->tft.drawString("--", xRoffset-17, yLine5); 
+                }
+
+  # ---------------------------------------------------------------------------
+  - id:                                       pageBuild3
+    mode:                                     restart
+    then:
+      - lambda: |-
+          int yLine0 = 48;
+          int yLine1 = 68;
+          int yLine2 = 88;
+          int yLine3 = 108;
+          int yLine4 = 128;
+          int yLine5 = 148;
+          int yHLine = 35;
+          int xCenter =  160;
+          int xLoffset = 10;
+          int xRoffset = 310;
+          int xCol1Center = 80;
+          int xCol2Center = 240;
+          int xCRoffset = xCenter - 10;
+          int xCLoffset = xCenter + 10;
+          int colYOffset = 40;
+
+          displayControllerComponent->tft.fillScreen(TFT_BLACK);
+          displayControllerComponent->tft.setRotation(1);
+          displayControllerComponent->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);       
+          displayControllerComponent->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
+
+          displayControllerComponent->tft.setFreeFont(FMB12);
+          displayControllerComponent->tft.setTextDatum(TC_DATUM);
+          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          displayControllerComponent->tft.drawString("Network Info",160, 10);
+          displayControllerComponent->tft.setTextDatum(TL_DATUM);
+          displayControllerComponent->tft.setFreeFont(FMB9);
+          displayControllerComponent->tft.drawString("MAC Addr:",xLoffset,yLine0);
+          displayControllerComponent->tft.drawString("WiFi Network:",xLoffset,yLine1);
+          displayControllerComponent->tft.drawString("WiFi Strength:",xLoffset,yLine2);
+          displayControllerComponent->tft.drawString("IP Address:",xLoffset,yLine3);
+          displayControllerComponent->tft.drawString("Uptime:",xLoffset,yLine4);
+          displayControllerComponent->tft.drawString("Code Version:",xLoffset,yLine5);
+          
+          displayControllerComponent->tft.setTextDatum(TR_DATUM);
+          displayControllerComponent->tft.drawString(id(host_mac).state.c_str(),xRoffset, yLine0);
+          displayControllerComponent->tft.drawString(id(host_ssid).state.c_str(),xRoffset, yLine1);
+          displayControllerComponent->tft.drawString("dBm",xRoffset, yLine2);
+          displayControllerComponent->tft.drawFloat(id(${sub_esphome_name}_wifi_signal).state,0,xRoffset - 37, yLine2);
+          displayControllerComponent->tft.drawString(id(host_ip).state.c_str(),xRoffset,yLine3);
+          displayControllerComponent->tft.drawString(id(uptime_f).state.c_str(),xRoffset,yLine4);
+          displayControllerComponent->tft.drawString(id(version).state.c_str(),xRoffset,yLine5);
+  # ---------------------------------------------------------------------------
+  - id:                                       displayRotationStatus
+    then:
+      - lambda: |-
+          int xCenter = 160;
+          int yCenter = 85;
+          int yHLine = 35;
+
+          displayControllerComponent->tft.fillScreen(TFT_BLACK);
+          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          displayControllerComponent->tft.setRotation(1);
+          displayControllerComponent->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);
+          displayControllerComponent->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
+
+          displayControllerComponent->tft.setFreeFont(FMB12);
+          displayControllerComponent->tft.setTextDatum(TC_DATUM);
+          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+          displayControllerComponent->tft.drawString("Settings",160, 10);
+          displayControllerComponent->tft.setTextDatum(TC_DATUM);
+          displayControllerComponent->tft.setFreeFont(FMB12);
+          
+          displayControllerComponent->tft.drawString("Screen Rotation is",xCenter,yCenter-30);
+          displayControllerComponent->tft.setFreeFont(FMB24);
+          if (id(refreshEnabled).state == true) {
+            displayControllerComponent->tft.drawString("ENABLED",xCenter,yCenter);
+          } else {
+            displayControllerComponent->tft.drawString("DISABLED",xCenter,yCenter);
+          }
+  # ---------------------------------------------------------------------------
+  - id:                                       displayScreensaverStatus
+    then:
+      - lambda: |-
+          int xCenter = 160;
+          int yCenter = 85;
+          int yHLine =  35;
+
+          displayControllerComponent->tft.fillScreen(TFT_BLACK);
+          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          displayControllerComponent->tft.setRotation(1);
+          displayControllerComponent->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);
+          displayControllerComponent->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
+
+
+          displayControllerComponent->tft.setFreeFont(FMB12);
+          displayControllerComponent->tft.setTextDatum(TC_DATUM);
+          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+          displayControllerComponent->tft.drawString("Settings",160, 10);
+          displayControllerComponent->tft.setTextDatum(TC_DATUM);
+          displayControllerComponent->tft.setFreeFont(FMB12);
+          
+          displayControllerComponent->tft.drawString("Screen Saver is",xCenter,yCenter-30);
+          displayControllerComponent->tft.setFreeFont(FMB24);
+          if (id(refreshEnabled).state == true) {
+            displayControllerComponent->tft.drawString("ENABLED",xCenter,yCenter);
+          } else {
+            displayControllerComponent->tft.drawString("DISABLED",xCenter,yCenter);
+          }
+
+#*****************************************************************************#
+# Switches 
+switch:
+  - platform:                                 gpio
+    pin:                                      GPIO38
+    name:                                     ${sub_text_devicename} Backlight
+    id:                                       backlight
+    icon:                                     mdi:lightbulb
+    restore_mode:                             RESTORE_DEFAULT_ON
+  # ----------------------------------------------------------------
+  - platform:                                 template
+    id:                                       refreshEnabled
+    name:                                     ${sub_text_devicename} Auto Scroll
+    optimistic:                               true
+  # ----------------------------------------------------------------
+  - platform:                                 template
+    name:                                     ${sub_text_devicename} Screensaver Mode
+    id:                                       screensaver
+    optimistic:                               true
+  # ----------------------------------------------------------------
+  - platform:                                 restart
+    id:                                       platform_restart
+    internal:                                 true
+    icon:                                     mdi:power
+
+#*****************************************************************************#
+#  Text-Sensors 
+text_sensor:
+  - platform:                                 template
+    name:                                     ${sub_text_devicename} Code Version
+    id:                                       version
+
+  - platform:                                 wifi_info             
+    ip_address:
+      name:                                   ${sub_text_devicename} IP Address
+      id:                                     host_ip
+      entity_category:                        diagnostic
+      icon:                                   mdi:fingerprint
+    ssid:
+      name:                                   ${sub_text_devicename} WiFi SSID
+      id:                                     host_ssid
+      entity_category:                        diagnostic
+      icon:                                   mdi:router-wireless
+    mac_address:
+      id:                                     host_mac
+      name:                                   ${sub_text_devicename} MAC Address
+      entity_category:                        diagnostic
+      icon:                                   mdi:fingerprint
+  # ----------------------------------------------------------------
+  - platform:                                 template
+    name:                                     "Uptime"
+    id:                                       uptime_f
+    internal:                                 true
+    lambda: |-
+              uint32_t dur = id(uptime_s).state;
+              int dys = 0;
+              int hrs = 0;
+              int mnts = 0;
+              if (dur > 86399) {
+                dys = trunc(dur / 86400);
+                dur = dur - (dys * 86400);
+              }
+              if (dur > 3599) {
+                hrs = trunc(dur / 3600);
+                dur = dur - (hrs * 3600);
+              }
+              if (dur > 59) {
+                mnts = trunc(dur / 60);
+                dur = dur - (mnts * 60);
+              }
+              char buffer[17];
+              sprintf(buffer, "%ud %02uh %02um %02us", dys, hrs, mnts, dur);
+              return {buffer};
+    icon:                                     mdi:clock-start
+    update_interval:                          10s
