@@ -789,7 +789,7 @@ script:
                 displayControllerComponent->tft.drawString("Level:", xLoffset, yLine5); 
                 displayControllerComponent->tft.setTextDatum(MR_DATUM);
                 displayControllerComponent->tft.drawString("%", xCLoffset, yLine5);
-                if (level <= 100) {
+                if (level1 <= 100) {
                   displayControllerComponent->tft.drawFloat(level1,0, xCLoffset-17, yLine5); 
                 } else  {
                   displayControllerComponent->tft.drawString("--", xCLoffset-17, yLine5); 
