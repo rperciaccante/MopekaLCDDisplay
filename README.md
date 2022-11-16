@@ -1,2 +1,2 @@
 # MopekaLCDDisplay
-More details to come
+More details to come soon
