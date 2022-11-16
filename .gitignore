@@ -32,3 +32,5 @@
 *.app
 
 secrets.yaml
+.esphome
+hold

@@ -1,4 +1,4 @@
-#*****************************************************************************#
+
 substitutions:
   sub_code_version:                           "2022.11.01"
   sub_hide_dev:                               "false"
@@ -62,8 +62,8 @@ esp32:
 #*****************************************************************************#
 custom_component:
   lambda: |-
-      App.register_component(displayControllerComponent);
-      return {displayControllerComponent};
+      App.register_component(display);
+      return {display};
   id: displayComponent
 #*****************************************************************************#
 logger:
@@ -378,15 +378,15 @@ sensor:
                         float greenThreshold =    80;
 
                         if ((checkValue > redThreshold) && (checkValue <= orangeThreshold)){
-                          return displayControllerComponent->tft.color565(255, 180, 0);           // orange
+                          return display->tft.color565(255, 180, 0);           // orange
                         } else if ((checkValue > orangeThreshold) && (checkValue <= yellowThreshold)){
-                          return displayControllerComponent->tft.color565(255, 255, 0);           // yellow
+                          return display->tft.color565(255, 255, 0);           // yellow
                           } else if ((checkValue > yellowThreshold) && (checkValue <= greenThreshold)){
-                          return displayControllerComponent->tft.color565(180, 255, 0);           // greenyellow
+                          return display->tft.color565(180, 255, 0);           // greenyellow
                         } else if ((checkValue > greenThreshold) && (checkValue <= 100)){
-                          return displayControllerComponent->tft.color565(0, 255, 0);             // green
+                          return display->tft.color565(0, 255, 0);             // green
                         } else {
-                            return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                            return display->tft.color565(255, 0, 0);           // red
                         } 
     battery_level:
       name:                                   ${sub_text_devicename} ${sub_sensor1_name} Battery
@@ -401,10 +401,10 @@ sensor:
 
                         if ((checkValue >= greenThreshold)) {
                             id(sensor1BattError).publish_state(false);
-                            return displayControllerComponent->tft.color565(0, 0, 0);             // black
+                            return display->tft.color565(0, 0, 0);             // black
                         } else {
                             id(sensor1BattError).publish_state(true);
-                            return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                            return display->tft.color565(255, 0, 0);           // red
                         } 
   # ---------------------------------------------------------------------------
   - platform:                                 mopeka_pro_check
@@ -428,15 +428,15 @@ sensor:
                           float greenThreshold = 80;
 
                           if ((checkValue > redThreshold) && (checkValue <= orangeThreshold)){
-                            return displayControllerComponent->tft.color565(255, 180, 0);           // orange
+                            return display->tft.color565(255, 180, 0);           // orange
                           } else if ((checkValue > orangeThreshold) && (checkValue <= yellowThreshold)){
-                            return displayControllerComponent->tft.color565(255, 255, 0);           // yellow
+                            return display->tft.color565(255, 255, 0);           // yellow
                             } else if ((checkValue > yellowThreshold) && (checkValue <= greenThreshold)){
-                            return displayControllerComponent->tft.color565(180, 255, 0);           // greenyellow
+                            return display->tft.color565(180, 255, 0);           // greenyellow
                           } else if ((checkValue > greenThreshold) && (checkValue <= 100)){
-                            return displayControllerComponent->tft.color565(0, 255, 0);             // green
+                            return display->tft.color565(0, 255, 0);             // green
                           } else {
-                              return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                              return display->tft.color565(255, 0, 0);           // red
                           } 
     battery_level:
       name:                                   ${sub_text_devicename} ${sub_sensor2_name} Battery
@@ -451,10 +451,10 @@ sensor:
 
                 if ((checkValue >= greenThreshold)) {
                     id(sensor2BattError).publish_state(false);
-                    return displayControllerComponent->tft.color565(0, 0, 0);             // black
+                    return display->tft.color565(0, 0, 0);             // black
                 } else {
                     id(sensor2BattError).publish_state(true);
-                    return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                    return display->tft.color565(255, 0, 0);           // red
                 } 
           - script.execute:                     errorCheck
   # ---------------------------------------------------------------------------
@@ -474,10 +474,10 @@ sensor:
 
                         if ((checkValue > redThreshold)) {
                             id(sensor1BTSignalError).publish_state(false);
-                            return displayControllerComponent->tft.color565(0, 0, 0);             // black
+                            return display->tft.color565(0, 0, 0);             // black
                         } else {
                             id(sensor1BTSignalError).publish_state(true);
-                            return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                            return display->tft.color565(255, 0, 0);           // red
                         } 
         - script.execute:                     errorCheck
   # ---------------------------------------------------------------------------
@@ -497,10 +497,10 @@ sensor:
 
                         if ((checkValue > redThreshold)) {
                             id(sensor2BTSignalError).publish_state(false);
-                            return displayControllerComponent->tft.color565(0, 0, 0);             // black
+                            return display->tft.color565(0, 0, 0);             // black
                         } else {
                             id(sensor2BTSignalError).publish_state(true);
-                            return displayControllerComponent->tft.color565(255, 0, 0);           // red
+                            return display->tft.color565(255, 0, 0);           // red
                         } 
         - script.execute:                     errorCheck
   # ---------------------------------------------------------------------------
@@ -548,7 +548,7 @@ script:
           id:     version
           state: ${sub_code_version}
       - lambda: |-
-                  displayControllerComponent->tft.fillScreen(TFT_BLACK);
+                  display->tft.fillScreen(TFT_BLACK);
                   id(sensor1HasError).publish_state(false);
                   id(sensor2HasError).publish_state(false);
   # ---------------------------------------------------------------------------
@@ -592,8 +592,8 @@ script:
     mode:                                     restart
     then:
       - lambda: |-
-          int xWidth =              displayControllerComponent->tft.width();
-          int yHeight =             displayControllerComponent->tft.height();
+          int xWidth =              display->tft.width();
+          int yHeight =             display->tft.height();
           int xCenter =             xWidth / 2;
           int yHLine =              34;                                                    // Vertical position of horizontal line
           int yColHeaderCenter =    yHLine + 15;
@@ -616,70 +616,70 @@ script:
          
           //**********************************************************************************
           //  Build common page layout - two rows
-              displayControllerComponent->tft.fillScreen(TFT_BLACK);
-              displayControllerComponent->tft.setRotation(1);
-              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
-              displayControllerComponent->tft.drawRoundRect(0, 0, xWidth, yHeight, 10, TFT_RED);
-              displayControllerComponent->tft.drawFastHLine(0, yHLine, xWidth, TFT_RED);
-              displayControllerComponent->tft.setFreeFont(FMB12);
-              displayControllerComponent->tft.setTextDatum(MC_DATUM);
+              display->tft.fillScreen(TFT_BLACK);
+              display->tft.setRotation(1);
+              display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+              display->tft.drawRoundRect(0, 0, xWidth, yHeight, 10, TFT_RED);
+              display->tft.drawFastHLine(0, yHLine, xWidth, TFT_RED);
+              display->tft.setFreeFont(FMB12);
+              display->tft.setTextDatum(MC_DATUM);
 
           // *** If a 2 column page, draw vertical line ***
-              displayControllerComponent->tft.drawFastVLine(160, 35, 135, TFT_RED);   
+              display->tft.drawFastVLine(160, 35, 135, TFT_RED);   
 
           // Display page1 title
-            displayControllerComponent->tft.drawString("${sub_page1_title}",xCenter, yHLine / 2);
+            display->tft.drawString("${sub_page1_title}",xCenter, yHLine / 2);
 
           // If there is an error on sensor 1, display error indicator before heading
             if (id(sensor1HasError).state == true) {
-              displayControllerComponent->tft.setFreeFont(FSB9);
-              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_RED);
-              displayControllerComponent->tft.fillCircle(xCLoffset - 5,colYOffset +10,10, TFT_RED);
-              displayControllerComponent->tft.drawString("!",xCLoffset - 5,colYOffset +10); 
-              displayControllerComponent->tft.setFreeFont(FMB12);
-              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+              display->tft.setFreeFont(FSB9);
+              display->tft.setTextColor(TFT_WHITE, TFT_RED);
+              display->tft.fillCircle(xCLoffset - 5,colYOffset +10,10, TFT_RED);
+              display->tft.drawString("!",xCLoffset - 5,colYOffset +10); 
+              display->tft.setFreeFont(FMB12);
+              display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
             }
-            displayControllerComponent->tft.drawString("${sub_sensor1_name}",xCol1Center ,yColHeaderCenter);
+            display->tft.drawString("${sub_sensor1_name}",xCol1Center ,yColHeaderCenter);
 
           // If there is an error on sensor 2, display error indicator before heading
             if (id(sensor2HasError).state == true) {
-              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_RED);
-              displayControllerComponent->tft.fillCircle(xRoffset - 5,colYOffset +10,10, TFT_RED);
-              displayControllerComponent->tft.setFreeFont(FSB9);
-              displayControllerComponent->tft.drawString("!",xRoffset - 5,colYOffset +10); 
-              displayControllerComponent->tft.setFreeFont(FMB12);
+              display->tft.setTextColor(TFT_WHITE, TFT_RED);
+              display->tft.fillCircle(xRoffset - 5,colYOffset +10,10, TFT_RED);
+              display->tft.setFreeFont(FSB9);
+              display->tft.drawString("!",xRoffset - 5,colYOffset +10); 
+              display->tft.setFreeFont(FMB12);
             }
-            displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
-            displayControllerComponent->tft.drawString("${sub_sensor2_name}",xCol2Center,yColHeaderCenter); 
+            display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            display->tft.drawString("${sub_sensor2_name}",xCol2Center,yColHeaderCenter); 
 
           // Build the Col1 Sensor background color
-              displayControllerComponent->tft.setFreeFont(FSB24);
-              displayControllerComponent->tft.setTextColor(TFT_BLACK, id(sensor1LvlBGColor).state);
-              displayControllerComponent->tft.fillRoundRect(xLoffset + 5, colYOffset + 30, 126, 90, 10, id(sensor1LvlBGColor).state);
+              display->tft.setFreeFont(FSB24);
+              display->tft.setTextColor(TFT_BLACK, id(sensor1LvlBGColor).state);
+              display->tft.fillRoundRect(xLoffset + 5, colYOffset + 30, 126, 90, 10, id(sensor1LvlBGColor).state);
 
           // Display sensor 1 level value
-              displayControllerComponent->tft.setTextDatum(ML_DATUM);
-              displayControllerComponent->tft.drawString("%", xCol1Center + 15, 110);   
-              displayControllerComponent->tft.setTextDatum(MR_DATUM); 
+              display->tft.setTextDatum(ML_DATUM);
+              display->tft.drawString("%", xCol1Center + 15, 110);   
+              display->tft.setTextDatum(MR_DATUM); 
               if (level1 <= 100 && level1 >= 0) {
-                displayControllerComponent->tft.drawFloat(level1,0, xCol1Center +14, 110);
+                display->tft.drawFloat(level1,0, xCol1Center +14, 110);
               } else {
-                displayControllerComponent->tft.drawString("--",  xCol1Center +14, 110);
+                display->tft.drawString("--",  xCol1Center +14, 110);
               }
 
           // Build the Col2 Sensor background color
-            displayControllerComponent->tft.setFreeFont(FSB24);
-            displayControllerComponent->tft.setTextColor(TFT_BLACK, id(sensor2LvlBGColor).state);
-            displayControllerComponent->tft.fillRoundRect(xCRoffset + 5, colYOffset + 30, 126,  90, 10, id(sensor2LvlBGColor).state);
+            display->tft.setFreeFont(FSB24);
+            display->tft.setTextColor(TFT_BLACK, id(sensor2LvlBGColor).state);
+            display->tft.fillRoundRect(xCRoffset + 5, colYOffset + 30, 126,  90, 10, id(sensor2LvlBGColor).state);
 
           // Display sensor 1 level value
-            displayControllerComponent->tft.setTextDatum(ML_DATUM);  
-            displayControllerComponent->tft.drawString("%", xCol2Center + 15, 110);
-            displayControllerComponent->tft.setTextDatum(MR_DATUM); 
+            display->tft.setTextDatum(ML_DATUM);  
+            display->tft.drawString("%", xCol2Center + 15, 110);
+            display->tft.setTextDatum(MR_DATUM); 
             if (level2 <= 100 && level2 >= 0) {
-              displayControllerComponent->tft.drawFloat(level2,0, xCol2Center + 14, 110);
+              display->tft.drawFloat(level2,0, xCol2Center + 14, 110);
             } else {
-              displayControllerComponent->tft.drawString("--",  xCol2Center + 14, 110);
+              display->tft.drawString("--",  xCol2Center + 14, 110);
             }
          
   # ---------------------------------------------------------------------------
@@ -687,8 +687,8 @@ script:
     mode:                                     restart
     then:
       - lambda: |-
-          int xWidth =              displayControllerComponent->tft.width();
-          int yHeight =             displayControllerComponent->tft.height();
+          int xWidth =              display->tft.width();
+          int yHeight =             display->tft.height();
           int xCenter =             xWidth / 2;
           int yHLine =              34;                                                    // Vertical position of horizontal line
           int yColHeaderCenter =    yHLine + 15;
@@ -727,117 +727,117 @@ script:
          
           //**********************************************************************************
           //  Build common page layout - two rows
-              displayControllerComponent->tft.fillScreen(TFT_BLACK);
-              displayControllerComponent->tft.setRotation(1);
-              displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
-              displayControllerComponent->tft.drawRoundRect(0, 0, xWidth, yHeight, 10, TFT_RED);
-              displayControllerComponent->tft.drawFastHLine(0, yHLine, xWidth, TFT_RED);
-              displayControllerComponent->tft.setFreeFont(FMB12);
-              displayControllerComponent->tft.setTextDatum(MC_DATUM);
+              display->tft.fillScreen(TFT_BLACK);
+              display->tft.setRotation(1);
+              display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+              display->tft.drawRoundRect(0, 0, xWidth, yHeight, 10, TFT_RED);
+              display->tft.drawFastHLine(0, yHLine, xWidth, TFT_RED);
+              display->tft.setFreeFont(FMB12);
+              display->tft.setTextDatum(MC_DATUM);
 
           // *** If a 2 column page, draw vertical line ***
-              displayControllerComponent->tft.drawFastVLine(160, 35, 135, TFT_RED);   
+              display->tft.drawFastVLine(160, 35, 135, TFT_RED);   
 
           // Display page2 title
-              displayControllerComponent->tft.drawString("${sub_page2_title}",xCenter, yHLine / 2);       
+              display->tft.drawString("${sub_page2_title}",xCenter, yHLine / 2);       
 
           // Print page and column headers
-              displayControllerComponent->tft.drawString("${sub_sensor1_name}",xCol1Center ,yColHeaderCenter);
-              displayControllerComponent->tft.drawString("${sub_sensor2_name}",xCol2Center,yColHeaderCenter); 
+              display->tft.drawString("${sub_sensor1_name}",xCol1Center ,yColHeaderCenter);
+              display->tft.drawString("${sub_sensor2_name}",xCol2Center,yColHeaderCenter); 
 
           // print MAC address under sensor name
-              displayControllerComponent->tft.setFreeFont(FS9);
-              displayControllerComponent->tft.drawString("${sub_sensor1_mac}",xCol1Center, yLine1);
-              displayControllerComponent->tft.drawString("${sub_sensor2_mac}",xCol2Center, yLine1);
+              display->tft.setFreeFont(FS9);
+              display->tft.drawString("${sub_sensor1_mac}",xCol1Center, yLine1);
+              display->tft.drawString("${sub_sensor2_mac}",xCol2Center, yLine1);
           
           // Column 1
             // Attribute Labels - each is inside a black rectangle we can change the color of in case of error
-                displayControllerComponent->tft.setFreeFont(FS9);
+                display->tft.setFreeFont(FS9);
             // Build the column 1 "BT Signal" line
-                displayControllerComponent->tft.setTextDatum(ML_DATUM);
-                displayControllerComponent->tft.setTextColor(TFT_WHITE, id(sensor1BTSignalBGColor).state);
-                displayControllerComponent->tft.fillRoundRect(5, yLine2 - 8, 151, 20, 5, id(sensor1BTSignalBGColor).state);
-                displayControllerComponent->tft.drawString("BT Signal:", xLoffset, yLine2);
-                displayControllerComponent->tft.setTextDatum(MR_DATUM);
-                displayControllerComponent->tft.drawFloat(btsignal1,0, xCLoffset-37, yLine2); 
-                displayControllerComponent->tft.drawString("dBm", xCLoffset, yLine2); 
-                displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);   
+                display->tft.setTextDatum(ML_DATUM);
+                display->tft.setTextColor(TFT_WHITE, id(sensor1BTSignalBGColor).state);
+                display->tft.fillRoundRect(5, yLine2 - 8, 151, 20, 5, id(sensor1BTSignalBGColor).state);
+                display->tft.drawString("BT Signal:", xLoffset, yLine2);
+                display->tft.setTextDatum(MR_DATUM);
+                display->tft.drawFloat(btsignal1,0, xCLoffset-37, yLine2); 
+                display->tft.drawString("dBm", xCLoffset, yLine2); 
+                display->tft.setTextColor(TFT_WHITE, TFT_BLACK);   
 
             // Build the column 1 "Battery" line
-                displayControllerComponent->tft.setTextDatum(ML_DATUM);
-                displayControllerComponent->tft.setTextColor(TFT_WHITE, id(sensor1BattBGColor).state);
-                displayControllerComponent->tft.fillRoundRect(5, yLine3 - 8, 151, 20, 5, id(sensor1BattBGColor).state); 
-                displayControllerComponent->tft.drawString("Battery:", xLoffset, yLine3);
-                displayControllerComponent->tft.setTextDatum(MR_DATUM);
-                displayControllerComponent->tft.drawFloat(batt1,0, xCLoffset-17, yLine3); 
-                displayControllerComponent->tft.drawString("%", xCLoffset, yLine3); 
-                displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);       
+                display->tft.setTextDatum(ML_DATUM);
+                display->tft.setTextColor(TFT_WHITE, id(sensor1BattBGColor).state);
+                display->tft.fillRoundRect(5, yLine3 - 8, 151, 20, 5, id(sensor1BattBGColor).state); 
+                display->tft.drawString("Battery:", xLoffset, yLine3);
+                display->tft.setTextDatum(MR_DATUM);
+                display->tft.drawFloat(batt1,0, xCLoffset-17, yLine3); 
+                display->tft.drawString("%", xCLoffset, yLine3); 
+                display->tft.setTextColor(TFT_WHITE, TFT_BLACK);       
               
             // Build the column 1 "Temp" line
-                displayControllerComponent->tft.setTextDatum(ML_DATUM);
-                displayControllerComponent->tft.drawString("Temp:", xLoffset, yLine4);
-                displayControllerComponent->tft.setTextDatum(MR_DATUM);
-                displayControllerComponent->tft.drawString("°F", xCLoffset, yLine4);
+                display->tft.setTextDatum(ML_DATUM);
+                display->tft.drawString("Temp:", xLoffset, yLine4);
+                display->tft.setTextDatum(MR_DATUM);
+                display->tft.drawString("°F", xCLoffset, yLine4);
                 if ((id(sensor1Temp).state >= -50) && (id(sensor1Temp).state <= 150)) {
-                  displayControllerComponent->tft.drawFloat((id(sensor1Temp).state * (9.0/5.0) + 32.0),0, xCLoffset-17, yLine4);
+                  display->tft.drawFloat((id(sensor1Temp).state * (9.0/5.0) + 32.0),0, xCLoffset-17, yLine4);
                 } else {
-                  displayControllerComponent->tft.drawString("--", xCLoffset-17, yLine4);
+                  display->tft.drawString("--", xCLoffset-17, yLine4);
                 }
 
               // Build the column 1 "Level" line
-                displayControllerComponent->tft.setTextDatum(ML_DATUM);
-                displayControllerComponent->tft.drawString("Level:", xLoffset, yLine5); 
-                displayControllerComponent->tft.setTextDatum(MR_DATUM);
-                displayControllerComponent->tft.drawString("%", xCLoffset, yLine5);
+                display->tft.setTextDatum(ML_DATUM);
+                display->tft.drawString("Level:", xLoffset, yLine5); 
+                display->tft.setTextDatum(MR_DATUM);
+                display->tft.drawString("%", xCLoffset, yLine5);
                 if (level1 <= 100) {
-                  displayControllerComponent->tft.drawFloat(level1,0, xCLoffset-17, yLine5); 
+                  display->tft.drawFloat(level1,0, xCLoffset-17, yLine5); 
                 } else  {
-                  displayControllerComponent->tft.drawString("--", xCLoffset-17, yLine5); 
+                  display->tft.drawString("--", xCLoffset-17, yLine5); 
                 }
 
           // Column 2
             // Attribute Labels - each is inside a black rectangle we can change the color of in case of error
-                displayControllerComponent->tft.setFreeFont(FS9);
+                display->tft.setFreeFont(FS9);
             // Build the column 2 "BT Signal" line
-                displayControllerComponent->tft.setTextDatum(ML_DATUM);
-                displayControllerComponent->tft.setTextColor(TFT_WHITE, id(sensor2BTSignalBGColor).state);
-                displayControllerComponent->tft.fillRoundRect(xCenter + 5, yLine2 - 8, 151, 20, 5, id(sensor2BTSignalBGColor).state);
-                displayControllerComponent->tft.drawString("BT Signal:", xCRoffset, yLine2);
-                displayControllerComponent->tft.setTextDatum(MR_DATUM);
-                displayControllerComponent->tft.drawFloat(btsignal2,0, xRoffset-37, yLine2); 
-                displayControllerComponent->tft.drawString("dBm", xRoffset, yLine2); 
-                displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK); 
+                display->tft.setTextDatum(ML_DATUM);
+                display->tft.setTextColor(TFT_WHITE, id(sensor2BTSignalBGColor).state);
+                display->tft.fillRoundRect(xCenter + 5, yLine2 - 8, 151, 20, 5, id(sensor2BTSignalBGColor).state);
+                display->tft.drawString("BT Signal:", xCRoffset, yLine2);
+                display->tft.setTextDatum(MR_DATUM);
+                display->tft.drawFloat(btsignal2,0, xRoffset-37, yLine2); 
+                display->tft.drawString("dBm", xRoffset, yLine2); 
+                display->tft.setTextColor(TFT_WHITE, TFT_BLACK); 
             
             // Build the column 2 "Battery" line
-                displayControllerComponent->tft.setTextDatum(ML_DATUM);
-                displayControllerComponent->tft.setTextColor(TFT_WHITE, id(sensor2BattBGColor).state);
-                displayControllerComponent->tft.fillRoundRect(xCenter + 5, yLine3 - 8, 151, 20, 5, id(sensor2BattBGColor).state); 
-                displayControllerComponent->tft.drawString("Battery:", xCRoffset, yLine3);
-                displayControllerComponent->tft.setTextDatum(MR_DATUM);
-                displayControllerComponent->tft.drawString("%", xRoffset, yLine3); 
-                displayControllerComponent->tft.drawFloat(batt2,0, xRoffset-17, yLine3); 
-                displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);  
+                display->tft.setTextDatum(ML_DATUM);
+                display->tft.setTextColor(TFT_WHITE, id(sensor2BattBGColor).state);
+                display->tft.fillRoundRect(xCenter + 5, yLine3 - 8, 151, 20, 5, id(sensor2BattBGColor).state); 
+                display->tft.drawString("Battery:", xCRoffset, yLine3);
+                display->tft.setTextDatum(MR_DATUM);
+                display->tft.drawString("%", xRoffset, yLine3); 
+                display->tft.drawFloat(batt2,0, xRoffset-17, yLine3); 
+                display->tft.setTextColor(TFT_WHITE, TFT_BLACK);  
 
             // Build the column 2 "Temp" line
-                displayControllerComponent->tft.setTextDatum(ML_DATUM);
-                displayControllerComponent->tft.drawString("Temp:", xCRoffset, yLine4);
-                displayControllerComponent->tft.setTextDatum(MR_DATUM);
-                displayControllerComponent->tft.drawString("°F", xRoffset, yLine4);
+                display->tft.setTextDatum(ML_DATUM);
+                display->tft.drawString("Temp:", xCRoffset, yLine4);
+                display->tft.setTextDatum(MR_DATUM);
+                display->tft.drawString("°F", xRoffset, yLine4);
                 if ((id(sensor1Temp).state >= -50) && (id(sensor2Temp).state <= 150)) {
-                  displayControllerComponent->tft.drawFloat((id(sensor2Temp).state * (9.0/5.0) + 32.0),0, xRoffset-17, yLine4);
+                  display->tft.drawFloat((id(sensor2Temp).state * (9.0/5.0) + 32.0),0, xRoffset-17, yLine4);
                 } else {
-                  displayControllerComponent->tft.drawString("--", xRoffset-17, yLine4);
+                  display->tft.drawString("--", xRoffset-17, yLine4);
                 }
 
             // Build the column 2 "Level" line
-                displayControllerComponent->tft.setTextDatum(ML_DATUM);
-                displayControllerComponent->tft.drawString("Level:", xCRoffset, yLine5);
-                displayControllerComponent->tft.setTextDatum(MR_DATUM);
-                displayControllerComponent->tft.drawString("%", xRoffset, yLine5);
+                display->tft.setTextDatum(ML_DATUM);
+                display->tft.drawString("Level:", xCRoffset, yLine5);
+                display->tft.setTextDatum(MR_DATUM);
+                display->tft.drawString("%", xRoffset, yLine5);
                 if (level2 <= 100) {
-                  displayControllerComponent->tft.drawFloat(level2,0, xRoffset-17, yLine5); 
+                  display->tft.drawFloat(level2,0, xRoffset-17, yLine5); 
                 } else  {
-                  displayControllerComponent->tft.drawString("--", xRoffset-17, yLine5); 
+                  display->tft.drawString("--", xRoffset-17, yLine5); 
                 }
 
   # ---------------------------------------------------------------------------
@@ -861,32 +861,32 @@ script:
           int xCLoffset = xCenter + 10;
           int colYOffset = 40;
 
-          displayControllerComponent->tft.fillScreen(TFT_BLACK);
-          displayControllerComponent->tft.setRotation(1);
-          displayControllerComponent->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);       
-          displayControllerComponent->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
+          display->tft.fillScreen(TFT_BLACK);
+          display->tft.setRotation(1);
+          display->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);       
+          display->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
 
-          displayControllerComponent->tft.setFreeFont(FMB12);
-          displayControllerComponent->tft.setTextDatum(TC_DATUM);
-          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
-          displayControllerComponent->tft.drawString("Network Info",160, 10);
-          displayControllerComponent->tft.setTextDatum(TL_DATUM);
-          displayControllerComponent->tft.setFreeFont(FMB9);
-          displayControllerComponent->tft.drawString("MAC Addr:",xLoffset,yLine0);
-          displayControllerComponent->tft.drawString("WiFi Network:",xLoffset,yLine1);
-          displayControllerComponent->tft.drawString("WiFi Strength:",xLoffset,yLine2);
-          displayControllerComponent->tft.drawString("IP Address:",xLoffset,yLine3);
-          displayControllerComponent->tft.drawString("Uptime:",xLoffset,yLine4);
-          displayControllerComponent->tft.drawString("Code Version:",xLoffset,yLine5);
+          display->tft.setFreeFont(FMB12);
+          display->tft.setTextDatum(TC_DATUM);
+          display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          display->tft.drawString("Network Info",160, 10);
+          display->tft.setTextDatum(TL_DATUM);
+          display->tft.setFreeFont(FMB9);
+          display->tft.drawString("MAC Addr:",xLoffset,yLine0);
+          display->tft.drawString("WiFi Network:",xLoffset,yLine1);
+          display->tft.drawString("WiFi Strength:",xLoffset,yLine2);
+          display->tft.drawString("IP Address:",xLoffset,yLine3);
+          display->tft.drawString("Uptime:",xLoffset,yLine4);
+          display->tft.drawString("Code Version:",xLoffset,yLine5);
           
-          displayControllerComponent->tft.setTextDatum(TR_DATUM);
-          displayControllerComponent->tft.drawString(id(host_mac).state.c_str(),xRoffset, yLine0);
-          displayControllerComponent->tft.drawString(id(host_ssid).state.c_str(),xRoffset, yLine1);
-          displayControllerComponent->tft.drawString("dBm",xRoffset, yLine2);
-          displayControllerComponent->tft.drawFloat(id(${sub_esphome_name}_wifi_signal).state,0,xRoffset - 37, yLine2);
-          displayControllerComponent->tft.drawString(id(host_ip).state.c_str(),xRoffset,yLine3);
-          displayControllerComponent->tft.drawString(id(uptime_f).state.c_str(),xRoffset,yLine4);
-          displayControllerComponent->tft.drawString(id(version).state.c_str(),xRoffset,yLine5);
+          display->tft.setTextDatum(TR_DATUM);
+          display->tft.drawString(id(host_mac).state.c_str(),xRoffset, yLine0);
+          display->tft.drawString(id(host_ssid).state.c_str(),xRoffset, yLine1);
+          display->tft.drawString("dBm",xRoffset, yLine2);
+          display->tft.drawFloat(id(${sub_esphome_name}_wifi_signal).state,0,xRoffset - 37, yLine2);
+          display->tft.drawString(id(host_ip).state.c_str(),xRoffset,yLine3);
+          display->tft.drawString(id(uptime_f).state.c_str(),xRoffset,yLine4);
+          display->tft.drawString(id(version).state.c_str(),xRoffset,yLine5);
   # ---------------------------------------------------------------------------
   - id:                                       displayRotationStatus
     then:
@@ -895,26 +895,26 @@ script:
           int yCenter = 85;
           int yHLine = 35;
 
-          displayControllerComponent->tft.fillScreen(TFT_BLACK);
-          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
-          displayControllerComponent->tft.setRotation(1);
-          displayControllerComponent->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);
-          displayControllerComponent->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
+          display->tft.fillScreen(TFT_BLACK);
+          display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          display->tft.setRotation(1);
+          display->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);
+          display->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
 
-          displayControllerComponent->tft.setFreeFont(FMB12);
-          displayControllerComponent->tft.setTextDatum(TC_DATUM);
-          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          display->tft.setFreeFont(FMB12);
+          display->tft.setTextDatum(TC_DATUM);
+          display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-          displayControllerComponent->tft.drawString("Settings",160, 10);
-          displayControllerComponent->tft.setTextDatum(TC_DATUM);
-          displayControllerComponent->tft.setFreeFont(FMB12);
+          display->tft.drawString("Settings",160, 10);
+          display->tft.setTextDatum(TC_DATUM);
+          display->tft.setFreeFont(FMB12);
           
-          displayControllerComponent->tft.drawString("Screen Rotation is",xCenter,yCenter-30);
-          displayControllerComponent->tft.setFreeFont(FMB24);
+          display->tft.drawString("Screen Rotation is",xCenter,yCenter-30);
+          display->tft.setFreeFont(FMB24);
           if (id(refreshEnabled).state == true) {
-            displayControllerComponent->tft.drawString("ENABLED",xCenter,yCenter);
+            display->tft.drawString("ENABLED",xCenter,yCenter);
           } else {
-            displayControllerComponent->tft.drawString("DISABLED",xCenter,yCenter);
+            display->tft.drawString("DISABLED",xCenter,yCenter);
           }
   # ---------------------------------------------------------------------------
   - id:                                       displayScreensaverStatus
@@ -924,27 +924,27 @@ script:
           int yCenter = 85;
           int yHLine =  35;
 
-          displayControllerComponent->tft.fillScreen(TFT_BLACK);
-          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
-          displayControllerComponent->tft.setRotation(1);
-          displayControllerComponent->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);
-          displayControllerComponent->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
+          display->tft.fillScreen(TFT_BLACK);
+          display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          display->tft.setRotation(1);
+          display->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);
+          display->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
 
 
-          displayControllerComponent->tft.setFreeFont(FMB12);
-          displayControllerComponent->tft.setTextDatum(TC_DATUM);
-          displayControllerComponent->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          display->tft.setFreeFont(FMB12);
+          display->tft.setTextDatum(TC_DATUM);
+          display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-          displayControllerComponent->tft.drawString("Settings",160, 10);
-          displayControllerComponent->tft.setTextDatum(TC_DATUM);
-          displayControllerComponent->tft.setFreeFont(FMB12);
+          display->tft.drawString("Settings",160, 10);
+          display->tft.setTextDatum(TC_DATUM);
+          display->tft.setFreeFont(FMB12);
           
-          displayControllerComponent->tft.drawString("Screen Saver is",xCenter,yCenter-30);
-          displayControllerComponent->tft.setFreeFont(FMB24);
+          display->tft.drawString("Screen Saver is",xCenter,yCenter-30);
+          display->tft.setFreeFont(FMB24);
           if (id(refreshEnabled).state == true) {
-            displayControllerComponent->tft.drawString("ENABLED",xCenter,yCenter);
+            display->tft.drawString("ENABLED",xCenter,yCenter);
           } else {
-            displayControllerComponent->tft.drawString("DISABLED",xCenter,yCenter);
+            display->tft.drawString("DISABLED",xCenter,yCenter);
           }
 
 #*****************************************************************************#
