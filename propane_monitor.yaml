@@ -483,7 +483,7 @@ sensor:
                         float checkValue = id(sensor1BTSignal).state;
                         float redThreshold = -80;
 
-                        if ((checkValue > redThreshold)) {
+                        if ((checkValue > redThreshold) && (checkValue < 0)) {
                             id(sensor1BTSignalError).publish_state(false);
                             return display->tft.color565(0, 0, 0);             // black
                         } else {
@@ -506,7 +506,7 @@ sensor:
                         float checkValue = id(sensor2BTSignal).state;
                         float redThreshold = -80;
 
-                        if ((checkValue > redThreshold)) {
+                        if ((checkValue > redThreshold) && (checkValue < 0)) {
                             id(sensor2BTSignalError).publish_state(false);
                             return display->tft.color565(0, 0, 0);             // black
                         } else {
