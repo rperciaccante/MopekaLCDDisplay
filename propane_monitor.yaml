@@ -1,10 +1,16 @@
 
 substitutions:
-  sub_code_version:                           "2022.11.01"
+  # If you are interested in this project, and you don't have any Mopeka sensors available,
+  # change 'sub_hide_dev' to "true".  This will enable components in the web portal that will allow
+  # you to test out the different features as if you were connected to an actual sensor.  This is
+  # very helpful if you are not at the same location as your sensors (for example, working on this 
+  # as a winter project when your RV is in storag3)
   sub_hide_dev:                               "false"
+  # ---------------------------------------------------------------------------
   # Project Specific Substitutions
   sub_text_devicename:                        "Propane Monitor" 
   sub_esphome_name:                           propane_monitor
+  sub_code_version:                           "2022.11.01"
   # Network and service related substitutions
   sub_wifi_ssid1:                             !secret esp_wifi_ssid1
   sub_wifi_password1:                         !secret esp_wifi_pass1
