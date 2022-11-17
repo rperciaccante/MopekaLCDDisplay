@@ -5,7 +5,7 @@ substitutions:
   # you to test out the different features as if you were connected to an actual sensor.  This is
   # very helpful if you are not at the same location as your sensors (for example, working on this 
   # as a winter project when your RV is in storag3)
-  sub_hide_dev:                               "false"
+  sub_hide_dev:                               "true"
   # ---------------------------------------------------------------------------
   # Project Specific Substitutions
   sub_text_devicename:                        "Propane Monitor" 
@@ -52,7 +52,7 @@ esphome:
     priority:                                 600
     then:
       script.execute:                         on_boot
-  # ---------------------------------------------------------------------------
+#*****************************************************************************#
 esp32:
   board: esp32-s3-devkitc-1
   variant: esp32s3
@@ -67,16 +67,27 @@ custom_component:
       return {display};
   id: displayComponent
 #*****************************************************************************#
+# Default is DEBUG, set to WARN to keep things easier to manage installation
+# and general use - can be changed as needed  - https://esphome.io/components/logger.html
 logger:
+  level:                                      WARN
 #*****************************************************************************#
-wifi:
-  networks: 
-    - ssid:                                   ${sub_wifi_ssid1}
-      password:                               ${sub_wifi_password1}
+# Best practice is to use specific SSID/PASSWD in local secrets.yaml file.
+# For more information on the WiFi component: https://esphome.io/components/wifi.html
+# In this configuration, it will enable a local hotspot, which you connect to, and pick the 
+# WiFi network to connect to.
+wifi: 
+  # To define specific SSID/PASSD, uncomment the next 3 lines and add the SSID/PASSED to the secrets.yaml file
+  # networks:
+  #  - ssid:                                   ${sub_wifi_ssid1}                        
+  #    password:                               ${sub_wifi_password1}                       
   ap:                                         # Enable fallback hotspot
     ssid:                                     ${sub_text_devicename} Hotspot
+    # To enable a password on the hotspot, uncomment the next line, and add the ap_password to the secrets.yaml file.
     password:                                 ${sub_wifi_ap_password}
 #*****************************************************************************#
+# This section tells the device to enable a local captive portal which can be used to connect to the device to 
+# change network settings or to upload a new firmware.  This is recommended.
 captive_portal:
 #*****************************************************************************#
 ota:
@@ -89,6 +100,9 @@ api:
 #*****************************************************************************#
 web_server: 
   port:                                       ${sub_web_server_port}
+  js_include:                                 "./css/v2/www.js"
+  js_url:                                     ""
+  version:                                    2
   auth:
     username:                                 ${sub_web_server_auth_user}
     password:                                 ${sub_web_server_auth_password}
@@ -105,9 +119,9 @@ interval:
       - script.execute:                       pageRefresh
       - if:
           condition:
-            switch.is_on:                       refreshEnabled
+            switch.is_on:                     refreshEnabled
           then:
-            - number.increment:                 pageCurrent
+            - number.increment:               pageCurrent
 
 #*****************************************************************************#
 # Binary Sensors                    
@@ -116,33 +130,31 @@ binary_sensor:
     id:                                       sensor1HasError
     name:                                     (DEV) Error - Sensor 1
     internal:                                 ${sub_hide_dev}
-
+  # ---------------------------------------------------------------------------
   - platform:                                 template
     id:                                       sensor1BattError
     name:                                     (DEV) Error - Sensor 1 Battery
     internal:                                 ${sub_hide_dev}
-
+  # ---------------------------------------------------------------------------
   - platform:                                 template
     id:                                       sensor1BTSignalError
     name:                                     (DEV) Error - Sensor 1 BT Signal
     internal:                                 ${sub_hide_dev}
-
   # ---------------------------------------------------------------------------
   - platform:                                 template
     id:                                       sensor2HasError
     name:                                     (DEV) Error - Sensor 2
     internal:                                 ${sub_hide_dev}
-
+    # ---------------------------------------------------------------------------
   - platform:                                 template
     id:                                       sensor2BattError
     name:                                     (DEV) Error - Sensor 2 Battery
     internal:                                 ${sub_hide_dev}
-
+  # ---------------------------------------------------------------------------
   - platform:                                 template
     id:                                       sensor2BTSignalError
     name:                                     (DEV) Error - Sensor 2 BT Signal
     internal:                                 ${sub_hide_dev}
-  
   # ---------------------------------------------------------------------------
   - platform:                                 gpio
     pin:
@@ -418,7 +430,7 @@ sensor:
       on_value:
         then:
           - sensor.template.publish:
-              id:     sensor2LvlBGColor
+              id:                             sensor2LvlBGColor
               state:    !lambda |- 
                           float checkValue = id(sensor2LPLevel).state;
                           float redThreshold = 20;
@@ -443,7 +455,7 @@ sensor:
       on_value:
         then:
           - sensor.template.publish:
-              id:     sensor2BattBGColor
+              id:                             sensor2BattBGColor
               state:    !lambda |- 
                 float checkValue = id(sensor2Battery).state;
                 float greenThreshold = 50;
@@ -455,7 +467,7 @@ sensor:
                     id(sensor2BattError).publish_state(true);
                     return display->tft.color565(255, 0, 0);           // red
                 } 
-          - script.execute:                     errorCheck
+          - script.execute:                   errorCheck
   # ---------------------------------------------------------------------------
   - platform:                                 ble_rssi
     mac_address:                              ${sub_sensor1_mac}
@@ -504,35 +516,34 @@ sensor:
         - script.execute:                     errorCheck
   # ---------------------------------------------------------------------------
   - platform:                                 template
-    name:                                       (DEV) Display - Sensor 1 LP Level Color
-    id:                                     sensor1LvlBGColor
+    name:                                     (DEV) Display - Sensor 1 LP Level Color
+    id:                                       sensor1LvlBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------  
   - platform:                                 template
-    name:                                       (DEV) Display - Sensor 2 LP Level Color
-    id:                                     sensor1BattBGColor
+    name:                                     (DEV) Display - Sensor 2 LP Level Color
+    id:                                       sensor1BattBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------   
   - platform:                                 template
-    name:                                       (DEV)  Display - Sensor 1 BT Level Color
-    id:                                     sensor1BTSignalBGColor
+    name:                                     (DEV)  Display - Sensor 1 BT Level Color
+    id:                                       sensor1BTSignalBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------  
   - platform:                                 template
-    name:                                       (DEV)  Display - Sensor 2 BT Level Color
-    id:                                     sensor2LvlBGColor
+    name:                                     (DEV)  Display - Sensor 2 BT Level Color
+    id:                                       sensor2LvlBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------  
   - platform:                                 template
-    name:                                       (DEV)  Display - Sensor 1 Battery Level Color
-    id:                                     sensor2BattBGColor
+    name:                                     (DEV)  Display - Sensor 1 Battery Level Color
+    id:                                       sensor2BattBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
   - platform:                                 template
-    name:                                       (DEV)  Display - Sensor 2 Battery Level Color
-    id:                                     sensor2BTSignalBGColor
+    name:                                     (DEV)  Display - Sensor 2 Battery Level Color
+    id:                                       sensor2BTSignalBGColor
     internal:                                 ${sub_hide_dev}
-
 
 #*****************************************************************************# 
 # Scripts 
