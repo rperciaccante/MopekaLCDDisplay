@@ -7,3 +7,6 @@ Like may owners of RV's, I hate running out of propane - this means no heat, no 
 2) WiFi NOT required for display use (as long as the display can ready the bluetooth messages from the sensors)
 3) Can act as a source of information for an instance of Home Assistant in addition to working as a display (WiFi is required for this)
 
+### Requirements
+1) LILYgo T-DISPLAY-S3 - https://www.amazon.com/gp/product/B0B7X5RVTH/
+This is written for a very specific display, due to compact size and hardware specs.  It will not work with other devices in its current configuration!
