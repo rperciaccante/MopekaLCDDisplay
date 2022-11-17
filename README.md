@@ -15,8 +15,9 @@ This is written for a very specific display, due to compact size and hardware sp
 3) Maximum of two Mopeka Pro tank sensors.
 4) Smart phone for initial information gathering and configuration
 5) Official Mopeka app, available for IOS or Android
-6) Bluetooth scanner app
 
+### Prerequisites and assumptions
+1) You have installed the Mopeka app on your mobile device, and configured it to work with your sensors - this will save you a tremendous amount of time setting up your display!
 
 ### Special Thanks
 I just wanted to thank the folks who helped with this project, as well as built the foundation that this is built on.
