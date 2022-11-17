@@ -273,8 +273,8 @@ number:
     id:                                       lp1Level
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
-    initial_value:                            75
-    min_value:                                -10
+    initial_value:                            -1
+    min_value:                                -1
     max_value:                                100
     step:                                     1
     on_value:
@@ -287,8 +287,8 @@ number:
     id:                                       lp2Level
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
-    initial_value:                            75
-    min_value:                                -10
+    initial_value:                            -1
+    min_value:                                -1
     max_value:                                100
     step:                                     1
     on_value:
@@ -301,8 +301,8 @@ number:
     id:                                       lp1Batt
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
-    initial_value:                            51
-    min_value:                                0
+    initial_value:                            -1
+    min_value:                                -1
     max_value:                                100
     step:                                     1
     on_value:
@@ -315,8 +315,8 @@ number:
     id:                                       lp2Batt
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
-    initial_value:                            51
-    min_value:                                -10
+    initial_value:                            -1
+    min_value:                                -1
     max_value:                                100
     step:                                     1
     on_value:
@@ -330,7 +330,7 @@ number:
     id:                                       lp1BT
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
-    initial_value:                            -50
+    initial_value:                            1
     min_value:                                -100
     max_value:                                1
     step:                                     1
@@ -344,7 +344,7 @@ number:
     id:                                       lp2BT
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
-    initial_value:                            -50
+    initial_value:                            1
     min_value:                                -100
     max_value:                                1
     step:                                     1
