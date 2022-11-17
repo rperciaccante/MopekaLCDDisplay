@@ -8,5 +8,7 @@ Like may owners of RV's, I hate running out of propane - this means no heat, no 
 3) Can act as a source of information for an instance of Home Assistant in addition to working as a display (WiFi is required for this)
 
 ### Requirements
+This is written for a very specific display, due to compact size and hardware specs.  It will not work with other devices in its current configuration, but could in theory work as a reference if you would like to do something similar with another display
+
 1) LILYgo T-DISPLAY-S3 - https://www.amazon.com/gp/product/B0B7X5RVTH/
-This is written for a very specific display, due to compact size and hardware specs.  It will not work with other devices in its current configuration!
+2) ESPHome - Visit https://esphome.io/guides/installing_esphome.html for instructions on how to install the command line version.  I have not tried this with the Home Assistane add-on, nor with the ESPHome dashboard.  One installed, you will build the files from the command prompt:  https://esphome.io/guides/cli.html
