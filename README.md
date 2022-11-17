@@ -12,3 +12,9 @@ This is written for a very specific display, due to compact size and hardware sp
 
 1) LILYgo T-DISPLAY-S3 - https://www.amazon.com/gp/product/B0B7X5RVTH/
 2) ESPHome - Visit https://esphome.io/guides/installing_esphome.html for instructions on how to install the command line version.  I have not tried this with the Home Assistane add-on, nor with the ESPHome dashboard.  One installed, you will build the files from the command prompt:  https://esphome.io/guides/cli.html
+3) Maximum of two Mopeka Pro tank sensors.
+4) Smart phone for initial information gathering and configuration
+
+
+### Special Thanks
+I just wanted to thank the folks who helped with this project, as well as built the foundation that this is built on.
