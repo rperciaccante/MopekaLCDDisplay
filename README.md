@@ -20,4 +20,4 @@ This is written for a very specific display, due to compact size and hardware sp
 1) You have installed the Mopeka app on your mobile device, and configured it to work with your sensors - this will save you a tremendous amount of time setting up your display!
 
 ### Special Thanks
-I just wanted to thank the folks who helped with this project, as well as built the foundation that this is built on.
+I just wanted to thank the folks who helped with this project, particularly ssieb on Discord!
