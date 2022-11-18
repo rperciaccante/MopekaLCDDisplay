@@ -891,10 +891,18 @@ script:
           
           display->tft.setTextDatum(TR_DATUM);
           display->tft.drawString(id(host_mac).state.c_str(),xRoffset, yLine0);
-          display->tft.drawString(id(host_ssid).state.c_str(),xRoffset, yLine1);
-          display->tft.drawString("dBm",xRoffset, yLine2);
-          display->tft.drawFloat(id(${sub_esphome_name}_wifi_signal).state,0,xRoffset - 37, yLine2);
-          display->tft.drawString(id(host_ip).state.c_str(),xRoffset,yLine3);
+          if (wifi::global_wifi_component->is_connected() == false) {
+            display->tft.drawString("Not Connected",xRoffset, yLine1);
+            display->tft.drawString("Not Connected",xRoffset, yLine2);
+            display->tft.drawString("Not Connected",xRoffset, yLine3);
+          } else {
+            display->tft.drawString(id(host_ssid).state.c_str(),xRoffset, yLine1);
+            display->tft.drawString("dBm",xRoffset, yLine2);
+            display->tft.drawFloat(id(${sub_esphome_name}_wifi_signal).state,0,xRoffset - 37, yLine2);
+            display->tft.drawString(id(host_ip).state.c_str(),xRoffset,yLine3);
+          }
+
+          
           display->tft.drawString(id(uptime_f).state.c_str(),xRoffset,yLine4);
           display->tft.drawString(id(version).state.c_str(),xRoffset,yLine5);
   # ---------------------------------------------------------------------------
@@ -988,7 +996,7 @@ text_sensor:
   - platform:                                 template
     name:                                     ${sub_text_devicename} Code Version
     id:                                       version
-
+  # ----------------------------------------------------------------
   - platform:                                 wifi_info             
     ip_address:
       name:                                   ${sub_text_devicename} IP Address
