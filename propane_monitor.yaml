@@ -4,7 +4,7 @@ substitutions:
   # change 'sub_hide_dev' to "true".  This will enable components in the web portal that will allow
   # you to test out the different features as if you were connected to an actual sensor.  This is
   # very helpful if you are not at the same location as your sensors (for example, working on this 
-  # as a winter project when your RV is in storag3)
+  # as a winter project when your RV is in storage)
   sub_hide_dev:                               "true"
   # ---------------------------------------------------------------------------
   # Project Specific Substitutions
@@ -78,9 +78,9 @@ logger:
 # WiFi network to connect to.
 wifi: 
   # To define specific SSID/PASSD, uncomment the next 3 lines and add the SSID/PASSED to the secrets.yaml file
-  # networks:
-  #  - ssid:                                   ${sub_wifi_ssid1}                        
-  #    password:                               ${sub_wifi_password1}                       
+  networks:
+   - ssid:                                    ${sub_wifi_ssid1}                        
+     password:                                ${sub_wifi_password1}                       
   ap:                                         # Enable fallback hotspot
     ssid:                                     ${sub_text_devicename} Hotspot
     # To enable a password on the hotspot, uncomment the next line, and add the ap_password to the secrets.yaml file.
@@ -110,6 +110,7 @@ web_server:
 esp32_ble_tracker:
 #*****************************************************************************#
 interval:
+  # Run the errorCheck script every 5 seconds
   - interval:                                 5s
     then:
       - script.execute:                       errorCheck
@@ -126,34 +127,46 @@ interval:
 #*****************************************************************************#
 # Binary Sensors                    
 binary_sensor:
+    # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Error status
+    #   in the web interface
   - platform:                                 template
     id:                                       sensor1HasError
     name:                                     (DEV) Error - Sensor 1
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Battery Error status
+    #   in the web interface
   - platform:                                 template
     id:                                       sensor1BattError
     name:                                     (DEV) Error - Sensor 1 Battery
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Bluetooth Signal Error status
+    #   in the web interface
   - platform:                                 template
     id:                                       sensor1BTSignalError
     name:                                     (DEV) Error - Sensor 1 BT Signal
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 2 Error status
+    #   in the web interface
   - platform:                                 template
     id:                                       sensor2HasError
-    name:                                     (DEV) Error - Sensor 2
+    name:                                     (DEV) Error - Sensor 2 
     internal:                                 ${sub_hide_dev}
     # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 2 Battery Error status
+    #   in the web interface
   - platform:                                 template
     id:                                       sensor2BattError
     name:                                     (DEV) Error - Sensor 2 Battery
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Bluetooth Signal Error status
+    #   in the web interface
   - platform:                                 template
     id:                                       sensor2BTSignalError
-    name:                                     (DEV) Error - Sensor 2 BT Signal
+    name:                                     (DEV) Error - Sensor 2 Battery
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
   - platform:                                 gpio
@@ -202,10 +215,13 @@ binary_sensor:
         - script.execute:                     screenTimer
         - switch.turn_on:                     backlight
         - switch.toggle:                      screensaver
-        - switch.turn_off:                    refreshEnabled
+        #- switch.turn_off:                    refreshEnabled
+        #- script.execute:                     pageRefresh
+        #- script.stop:                        pageRefresh
         - script.execute:                     displayScreensaverStatus
         - delay:                              3s
-        - switch.turn_on:                     refreshEnabled
+        #- switch.turn_on:                     refreshEnabled
+        #- script.execute:                     pageRefresh
 
 #*****************************************************************************#
 # Buttons 
@@ -215,8 +231,21 @@ button:
     id:                                       reboot
     on_press:
       then:
-        - switch.toggle:                      platform_restart
+        - switch.toggle:                      platform_restart # 
+
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to trigger the screensaver timeout
+    #   in the web interface
+  - platform:                                 template
+    name:                                     (DEV) Device - Trigger Screensaver Timeout
+    id:                                       triggerScreensaver
+    internal:                                 ${sub_hide_dev}
+    on_press:
+      then:
+        - script.execute:                     screenTimer
+  # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to refresh the current page view
+    #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Refresh Current
     id:                                       rotatePage
@@ -225,6 +254,8 @@ button:
       then:
         - script.execute:                     pageRefresh
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to force view of Page 1 (sensor level widgets)
+    #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Page 1
     internal:                                 ${sub_hide_dev}
@@ -232,6 +263,8 @@ button:
       then:
         - script.execute:                     pageBuild1
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to force view of Page 2 (Sensor Conditions)
+    #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Page 2
     internal:                                 ${sub_hide_dev}
@@ -239,6 +272,8 @@ button:
       then:
         - script.execute:                     pageBuild2
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to force view of Page 3 (Network Information)
+    #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Page 3
     internal:                                 ${sub_hide_dev}
@@ -246,6 +281,8 @@ button:
       then:
         - script.execute:                     pageBuild3
     # ---------------------------------------------------------------------------
+      # When sub_hide_dev is enabled, this will allow you to force view of Rotation Status page
+      #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Scroll Status
     internal:                                 ${sub_hide_dev}
@@ -253,11 +290,22 @@ button:
       then:
         - script.execute:                     displayRotationStatus
         - number.increment:                   pageCurrent
+    # ---------------------------------------------------------------------------
+      # When sub_hide_dev is enabled, this will allow you to force view of Screensaver Status page
+      #   in the web interface
+  - platform:                                 template
+    name:                                     (DEV) Page - Show Screensaver Status
+    internal:                                 ${sub_hide_dev}
+    on_press:
+      then:
+        - script.execute:                     displayScreensaverStatus
 
 #*****************************************************************************#
 # Numbers 
 number:
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to change the page currenty displayed on the LCD
+    #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Current Page
     id:                                       pageCurrent
@@ -268,9 +316,12 @@ number:
     max_value:                                2
     step:                                     1
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to set the current sensor 1 level
+    #   Initial value is set outside acceptable range so as not to impact legitimate sensor levels
+    #  ** NOTE ** this sends the value directly to sensor opject to replicate exactly how the device processes values
   - platform:                                 template
-    name:                                     (DEV) Sensor 1 Level
-    id:                                       lp1Level
+    name:                                     (DEV) LP Level - Sensor 1
+    id:                                       dev_sensor1LPLevel
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
     initial_value:                            -1
@@ -280,11 +331,14 @@ number:
     on_value:
       then:
         - lambda: |-
-            id(sensor1LPLevel).publish_state(id(lp1Level).state);
+            id(sensor1LPLevel).publish_state(id(dev_sensor1LPLevel).state);
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to set the current sensor 2 level in the web interface
+    #   Initial value is set outside acceptable range so as not to impact legitimate sensor levels
+    #  ** NOTE ** this sends the value directly to sensor opject to replicate exactly how the device processes values
   - platform:                                 template
-    name:                                     (DEV) Sensor 2 Level
-    id:                                       lp2Level
+    name:                                     (DEV) LP Level - Sensor 2
+    id:                                       dev_sensor2LPLevel
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
     initial_value:                            -1
@@ -294,11 +348,14 @@ number:
     on_value:
       then:
         - lambda: |-
-            id(sensor2LPLevel).publish_state(id(lp2Level).state);
+            id(sensor2LPLevel).publish_state(id(dev_sensor2LPLevel).state);
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to set the current sensor 1 battery level in the web interface
+    #   Initial value is set outside acceptable range so as not to impact legitimate sensor levels
+    #  ** NOTE ** this sends the value directly to sensor opject to replicate exactly how the device processes values
   - platform:                                 template
-    name:                                     (DEV) Sensor 1 Battery
-    id:                                       lp1Batt
+    name:                                     (DEV) Battery - Sensor 1 
+    id:                                       dev_sensor1Batt
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
     initial_value:                            -1
@@ -308,11 +365,14 @@ number:
     on_value:
       then:
         - lambda: |-
-            id(sensor1Battery).publish_state(id(lp1Batt).state);
+            id(sensor1Batt).publish_state(id(dev_sensor1Batt).state);
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to set the current sensor 2 battery level in the web interface
+    #   Initial value is set outside acceptable range so as not to impact legitimate sensor levels
+    #  ** NOTE ** this sends the value directly to sensor opject to replicate exactly how the device processes values
   - platform:                                 template
-    name:                                     (DEV) Sensor 2 Battery
-    id:                                       lp2Batt
+    name:                                     (DEV) Battery - Sensor 2
+    id:                                       dev_sensor2Batt
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
     initial_value:                            -1
@@ -322,12 +382,51 @@ number:
     on_value:
       then:
         - lambda: |-
-            id(sensor2Battery).publish_state(id(lp2Batt).state);
+            id(sensor2Batt).publish_state(id(dev_sensor2Batt).state);
+  
+  # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to set the current sensor 1 temperature in the web interface
+    #   Initial value is set outside acceptable range so as not to impact legitimate sensor levels
+    #  ** NOTE ** this sends the value directly to sensor opject to replicate exactly how the device processes values
+  - platform:                                 template
+    name:                                     (DEV) Temp - Sensor 1
+    id:                                       dev_sensor1Temp
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            -1
+    min_value:                                -1
+    max_value:                                100
+    step:                                     1
+    on_value:
+      then:
+        - lambda: |-
+            id(sensor1Temp).publish_state(id(dev_sensor1Temp).state);
+  
+  # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to set the current sensor 2 temperature in the web interface
+    #   Initial value is set outside acceptable range so as not to impact legitimate sensor levels
+    #  ** NOTE ** this sends the value directly to sensor opject to replicate exactly how the device processes values
+  - platform:                                 template
+    name:                                     (DEV) Temp - Sensor 2
+    id:                                       dev_sensor2Temp
+    internal:                                 ${sub_hide_dev}
+    optimistic:                               true
+    initial_value:                            -1
+    min_value:                                -1
+    max_value:                                100
+    step:                                     1
+    on_value:
+      then:
+        - lambda: |-
+            id(sensor2Temp).publish_state(id(dev_sensor2Temp).state);
 
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to set the current sensor 1 bluetooth signal level in the web interface
+    #   Initial value is set outside acceptable range so as not to impact legitimate sensor levels
+    #  ** NOTE ** this sends the value directly to sensor opject to replicate exactly how the device processes values
   - platform:                                 template
-    name:                                     (DEV) Sensor 1 BT Signal
-    id:                                       lp1BT
+    name:                                     (DEV) BT Signal - Sensor 1
+    id:                                       dev_sensor1BTSignal
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
     initial_value:                            1
@@ -337,11 +436,14 @@ number:
     on_value:
       then:
         - lambda: |-
-            id(sensor1BTSignal).publish_state(id(lp1BT).state);
+            id(sensor1BTSignal).publish_state(id(dev_sensor1BTSignal).state);
     # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to set the current sensor 2 bluetooth signal level in the web interface
+    #   Initial value is set outside acceptable range so as not to impact legitimate sensor levels
+    #  ** NOTE ** this sends the value directly to sensor opject to replicate exactly how the device processes values
   - platform:                                 template
-    name:                                     (DEV) Sensor 2 BT Signal
-    id:                                       lp2BT
+    name:                                     (DEV) BT Signal - Sensor 2
+    id:                                       dev_sensor2BTSignal
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
     initial_value:                            1
@@ -351,7 +453,7 @@ number:
     on_value:
       then:
         - lambda: |-
-            id(sensor2BTSignal).publish_state(id(lp2BT).state);
+            id(sensor2BTSignal).publish_state(id(dev_sensor2BTSignal).state);
 
 #*****************************************************************************#
 # Sensors
@@ -363,7 +465,7 @@ sensor:
     internal:                                 true
   # ---------------------------------------------------------------------------
   - platform:                                 wifi_signal
-    name:                                     ${sub_text_devicename} WiFi Signal
+    name:                                     ${sub_text_devicename} Device WiFi Signal
     id:                                       ${sub_esphome_name}_wifi_signal
     entity_category:                          diagnostic
     update_interval:                          30s
@@ -373,7 +475,11 @@ sensor:
     tank_type:                                ${sub_sensor1_tank_type}
     temperature:
       name:                                   ${sub_text_devicename} ${sub_sensor1_name} Temp
-      id:                                     sensor1Temp
+      id:                                     sensor1Temp 
+      on_value:
+        then:
+          - lambda: |-
+              id(sensor2Batt).publish_state(id(sensor1Temp).state);
     level:
       name:                                   ${sub_text_devicename} ${sub_sensor1_name} Level
       id:                                     sensor1LPLevel
@@ -401,13 +507,13 @@ sensor:
                         } 
     battery_level:
       name:                                   ${sub_text_devicename} ${sub_sensor1_name} Battery
-      id:                                     sensor1Battery
+      id:                                     sensor1Batt
       on_value:
         then:
           - sensor.template.publish:
               id:                             sensor1BattBGColor
               state:    !lambda |- 
-                        float checkValue = id(sensor1Battery).state;
+                        float checkValue = id(sensor1Batt).state;
                         float greenThreshold = 50;
 
                         if ((checkValue >= greenThreshold)) {
@@ -415,6 +521,7 @@ sensor:
                             return display->tft.color565(0, 0, 0);             // black
                         } else {
                             id(sensor1BattError).publish_state(true);
+                            ESP_LOGW("errorCheck","${sub_sensor1_name} Battery level outside of margins: %.0f", checkValue);
                             return display->tft.color565(255, 0, 0);           // red
                         } 
   # ---------------------------------------------------------------------------
@@ -451,13 +558,13 @@ sensor:
                           } 
     battery_level:
       name:                                   ${sub_text_devicename} ${sub_sensor2_name} Battery
-      id:                                     sensor2Battery
+      id:                                     sensor2Batt
       on_value:
         then:
           - sensor.template.publish:
               id:                             sensor2BattBGColor
               state:    !lambda |- 
-                float checkValue = id(sensor2Battery).state;
+                float checkValue = id(sensor2Batt).state;
                 float greenThreshold = 50;
 
                 if ((checkValue >= greenThreshold)) {
@@ -465,6 +572,7 @@ sensor:
                     return display->tft.color565(0, 0, 0);             // black
                 } else {
                     id(sensor2BattError).publish_state(true);
+                    ESP_LOGW("errorCheck","${sub_sensor2_name} Battery level outside of margins: %.0f", checkValue);
                     return display->tft.color565(255, 0, 0);           // red
                 } 
           - script.execute:                   errorCheck
@@ -488,6 +596,7 @@ sensor:
                             return display->tft.color565(0, 0, 0);             // black
                         } else {
                             id(sensor1BTSignalError).publish_state(true);
+                            ESP_LOGW("errorCheck","${sub_sensor1_name} BLE RSSI level outside of margins: %.0f", checkValue);
                             return display->tft.color565(255, 0, 0);           // red
                         } 
         - script.execute:                     errorCheck
@@ -496,7 +605,7 @@ sensor:
     mac_address:                              ${sub_sensor2_mac}
     name:                                     ${sub_text_devicename} ${sub_sensor2_name} BLE RSSI
     id:                                       sensor2BTSignal
-    entity_category:                          diagnostic
+    entity_category:                          diagnostic              
     icon:                                     mdi:signal
     on_value:
       then:
@@ -511,35 +620,48 @@ sensor:
                             return display->tft.color565(0, 0, 0);             // black
                         } else {
                             id(sensor2BTSignalError).publish_state(true);
+                            ESP_LOGW("errorCheck","${sub_sensor2_name} BLE RSSI level outside of margins: %.0f", checkValue);
                             return display->tft.color565(255, 0, 0);           // red
                         } 
         - script.execute:                     errorCheck
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 level widget
+    #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Display - Sensor 1 LP Level Color
     id:                                       sensor1LvlBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------  
+    # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 level widget
+    #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Display - Sensor 2 LP Level Color
     id:                                       sensor1BattBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------   
+    # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 bluetooth signal widget
+    #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 1 BT Level Color
     id:                                       sensor1BTSignalBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------  
+  # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 bluetooth signal widget
+  #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 2 BT Level Color
     id:                                       sensor2LvlBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------  
+  # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 battery level widget
+  #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 1 Battery Level Color
     id:                                       sensor2BattBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 battery level widget
+  #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 2 Battery Level Color
     id:                                       sensor2BTSignalBGColor
@@ -555,8 +677,8 @@ script:
       - switch.turn_on:                       refreshEnabled
       - script.execute:                       screenTimer
       - text_sensor.template.publish:
-          id:     version
-          state: ${sub_code_version}
+          id:                                 version
+          state:                              ${sub_code_version}
       - lambda: |-
                   display->tft.fillScreen(TFT_BLACK);
                   id(sensor1HasError).publish_state(false);
@@ -565,7 +687,9 @@ script:
   - id:                                       screenTimer
     mode:                                     restart
     then:
-      - logger.log:                           "Screen timeout script called"
+      - logger.log:
+          format:                             "Screen timeout script called"
+          level:                              WARN
       - if:
           condition:                 
             switch.is_on:                     screensaver
@@ -608,21 +732,16 @@ script:
           int yHLine =              34;                                                    // Vertical position of horizontal line
           int yColHeaderCenter =    yHLine + 15;
           
-          //int xCenter =  160;
-          int xLoffset = 10;
-          int xRoffset = 310;
-          int xCol1Center = 80;
-          int xCol2Center = 240;
-          int xCRoffset = xCenter + 10;
-          int xCLoffset = xCenter - 10;
-          int colYOffset = 40; 
+          int xLoffset =            10;
+          int xRoffset =            310;
+          int xCol1Center =         80;
+          int xCol2Center =         240;
+          int xCRoffset =           xCenter + 10;
+          int xCLoffset =           xCenter - 10;
+          int colYOffset =          40; 
 
-          //**********************************************************************************
-          // Used for testing
-          //float level1 = id(lp1Level).state;
-          //float level2 = id(lp2Level).state;
-          float level1 = id(sensor1LPLevel).state;
-          float level2 = id(sensor2LPLevel).state;
+          float level1 =            id(sensor1LPLevel).state;
+          float level2 =            id(sensor2LPLevel).state;
          
           //**********************************************************************************
           //  Build common page layout - two rows
@@ -700,42 +819,31 @@ script:
           int xWidth =              display->tft.width();
           int yHeight =             display->tft.height();
           int xCenter =             xWidth / 2;
-          int yHLine =              34;                                                    // Vertical position of horizontal line
+          int yHLine =              34;     
           int yColHeaderCenter =    yHLine + 15;
 
-          int lineYoffset = 20;
-          int yLine1 = 75; // 4
-          int yLine2 = yLine1 + lineYoffset; //93;
-          int yLine3 = yLine2 + lineYoffset; //113;
-          int yLine4 = yLine3 + lineYoffset;//133;
-          int yLine5 = yLine4 + lineYoffset; //153;
+          int lineYoffset =         20;
+          int yLine1 =              75;
+          int yLine2 =              yLine1 + lineYoffset;
+          int yLine3 =              yLine2 + lineYoffset;
+          int yLine4 =              yLine3 + lineYoffset;
+          int yLine5 =              yLine4 + lineYoffset; 
           
-          //int xCenter =  160;
-          int xLoffset = 10;
-          int xRoffset = 310;
-          int xCol1Center = 80;
-          int xCol2Center = 240;
-          int xCRoffset = xCenter + 10;
-          int xCLoffset = xCenter - 10;
-          int colYOffset = 40; 
+          int xLoffset =            10;
+          int xRoffset =            310;
+          int xCol1Center =         80;
+          int xCol2Center =         240;
+          int xCRoffset =           xCenter + 10;
+          int xCLoffset =           xCenter - 10;
+          int colYOffset =          40; 
 
-          
-          float batt1 = id(sensor1Battery).state;
-          float batt2 = id(sensor2Battery).state;
-          float btsignal1 = id(sensor1BTSignal).state;
-          float btsignal2 = id(sensor2BTSignal).state;
-          float level1 = id(sensor1LPLevel).state;
-          float level2 = id(sensor2LPLevel).state;
+          float batt1 =             id(sensor1Batt).state;
+          float batt2 =             id(sensor2Batt).state;
+          float btsignal1 =         id(sensor1BTSignal).state;
+          float btsignal2 =         id(sensor2BTSignal).state;
+          float level1 =            id(sensor1LPLevel).state;
+          float level2 =            id(sensor2LPLevel).state;
 
-          //**********************************************************************************
-          // Used for testing
-          //float level1 = id(lp1Level).state;
-          //float level2 = id(lp2Level).state;
-          //float batt1 = id(lp1Batt).state;
-          //float batt2 = id(lp2Batt).state;
-          
-         
-          //**********************************************************************************
           //  Build common page layout - two rows
               display->tft.fillScreen(TFT_BLACK);
               display->tft.setRotation(1);
@@ -855,21 +963,21 @@ script:
     mode:                                     restart
     then:
       - lambda: |-
-          int yLine0 = 48;
-          int yLine1 = 68;
-          int yLine2 = 88;
-          int yLine3 = 108;
-          int yLine4 = 128;
-          int yLine5 = 148;
-          int yHLine = 35;
-          int xCenter =  160;
-          int xLoffset = 10;
-          int xRoffset = 310;
-          int xCol1Center = 80;
-          int xCol2Center = 240;
-          int xCRoffset = xCenter - 10;
-          int xCLoffset = xCenter + 10;
-          int colYOffset = 40;
+          int yLine0 =              48;
+          int yLine1 =              68;
+          int yLine2 =              88;
+          int yLine3 =              108;
+          int yLine4 =              128;
+          int yLine5 =              148;
+          int yHLine =              35;
+          int xCenter =             160;
+          int xLoffset =            10;
+          int xRoffset =            310;
+          int xCol1Center =         80;
+          int xCol2Center =         240;
+          int xCRoffset =           xCenter - 10;
+          int xCLoffset =           xCenter + 10;
+          int colYOffset =          40;
 
           display->tft.fillScreen(TFT_BLACK);
           display->tft.setRotation(1);
@@ -891,7 +999,7 @@ script:
           
           display->tft.setTextDatum(TR_DATUM);
           display->tft.drawString(id(host_mac).state.c_str(),xRoffset, yLine0);
-          if (wifi::global_wifi_component->is_connected() == false) {
+          if (!wifi::global_wifi_component->is_connected()) {
             display->tft.drawString("Not Connected",xRoffset, yLine1);
             display->tft.drawString("Not Connected",xRoffset, yLine2);
             display->tft.drawString("Not Connected",xRoffset, yLine3);
@@ -959,7 +1067,7 @@ script:
           
           display->tft.drawString("Screen Saver is",xCenter,yCenter-30);
           display->tft.setFreeFont(FMB24);
-          if (id(refreshEnabled).state == true) {
+          if (id(screensaver).state == true) {
             display->tft.drawString("ENABLED",xCenter,yCenter);
           } else {
             display->tft.drawString("DISABLED",xCenter,yCenter);
@@ -970,19 +1078,21 @@ script:
 switch:
   - platform:                                 gpio
     pin:                                      GPIO38
-    name:                                     ${sub_text_devicename} Backlight
+    name:                                     ${sub_text_devicename} Device Backlight
     id:                                       backlight
     icon:                                     mdi:lightbulb
     restore_mode:                             RESTORE_DEFAULT_ON
   # ----------------------------------------------------------------
   - platform:                                 template
     id:                                       refreshEnabled
-    name:                                     ${sub_text_devicename} Auto Scroll
+    name:                                     ${sub_text_devicename} Device Auto Scroll
+    restore_state:                            true
     optimistic:                               true
   # ----------------------------------------------------------------
   - platform:                                 template
-    name:                                     ${sub_text_devicename} Screensaver Mode
+    name:                                     ${sub_text_devicename} Device Screensaver Mode
     id:                                       screensaver
+    restore_state:                            true
     optimistic:                               true
   # ----------------------------------------------------------------
   - platform:                                 restart
@@ -994,23 +1104,23 @@ switch:
 #  Text-Sensors 
 text_sensor:
   - platform:                                 template
-    name:                                     ${sub_text_devicename} Code Version
+    name:                                     ${sub_text_devicename} Device Code Version
     id:                                       version
   # ----------------------------------------------------------------
   - platform:                                 wifi_info             
     ip_address:
-      name:                                   ${sub_text_devicename} IP Address
+      name:                                   ${sub_text_devicename} Device IP Address
       id:                                     host_ip
       entity_category:                        diagnostic
       icon:                                   mdi:fingerprint
     ssid:
-      name:                                   ${sub_text_devicename} WiFi SSID
+      name:                                   ${sub_text_devicename} Device WiFi SSID
       id:                                     host_ssid
       entity_category:                        diagnostic
       icon:                                   mdi:router-wireless
     mac_address:
       id:                                     host_mac
-      name:                                   ${sub_text_devicename} MAC Address
+      name:                                   ${sub_text_devicename} Device MAC Address
       entity_category:                        diagnostic
       icon:                                   mdi:fingerprint
   # ----------------------------------------------------------------
