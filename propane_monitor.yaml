@@ -5,7 +5,7 @@ substitutions:
   # you to test out the different features as if you were connected to an actual sensor.  This is
   # very helpful if you are not at the same location as your sensors (for example, working on this 
   # as a winter project when your RV is in storage)
-  sub_hide_dev:                               "true"
+  sub_hide_dev:                               "false"
   # ---------------------------------------------------------------------------
   # Project Specific Substitutions
   sub_text_devicename:                        "Propane Monitor" 
@@ -70,7 +70,9 @@ custom_component:
 # Default is DEBUG, set to WARN to keep things easier to manage installation
 # and general use - can be changed as needed  - https://esphome.io/components/logger.html
 logger:
-  level:                                      WARN
+  level:                                      DEBUG
+  #logs:
+  #  ble_client: DEBUG
 #*****************************************************************************#
 # Best practice is to use specific SSID/PASSWD in local secrets.yaml file.
 # For more information on the WiFi component: https://esphome.io/components/wifi.html
@@ -127,6 +129,13 @@ interval:
 #*****************************************************************************#
 # Binary Sensors                    
 binary_sensor:
+    # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 connection status
+    #   in the web interface
+  - platform:                                 template
+    id:                                       sensor1IsConnected
+    name:                                     (DEV) State - Sensor 1 Is Connected
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Error status
     #   in the web interface
   - platform:                                 template
@@ -146,6 +155,13 @@ binary_sensor:
   - platform:                                 template
     id:                                       sensor1BTSignalError
     name:                                     (DEV) Error - Sensor 1 BT Signal
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------
+    # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 2 connection status
+    #   in the web interface
+  - platform:                                 template
+    id:                                       sensor2IsConnected
+    name:                                     (DEV) State - Sensor 2 Is Connected
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 2 Error status
@@ -393,8 +409,8 @@ number:
     id:                                       dev_sensor1Temp
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
-    initial_value:                            -1
-    min_value:                                -1
+    initial_value:                            -50
+    min_value:                                -50
     max_value:                                100
     step:                                     1
     on_value:
@@ -411,8 +427,8 @@ number:
     id:                                       dev_sensor2Temp
     internal:                                 ${sub_hide_dev}
     optimistic:                               true
-    initial_value:                            -1
-    min_value:                                -1
+    initial_value:                            -50
+    min_value:                                -50
     max_value:                                100
     step:                                     1
     on_value:
@@ -628,43 +644,57 @@ sensor:
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 level widget
     #   in the web interface
   - platform:                                 template
-    name:                                     (DEV) Display - Sensor 1 LP Level Color
+    name:                                     (DEV) Display - Sensor 1 LP Level BG Color
     id:                                       sensor1LvlBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------  
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 level widget
     #   in the web interface
   - platform:                                 template
-    name:                                     (DEV) Display - Sensor 2 LP Level Color
+    name:                                     (DEV) Display - Sensor 1 Battery BG Color
     id:                                       sensor1BattBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------   
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 bluetooth signal widget
     #   in the web interface
   - platform:                                 template
-    name:                                     (DEV)  Display - Sensor 1 BT Level Color
+    name:                                     (DEV)  Display - Sensor 1 BT Signal BG Color
     id:                                       sensor1BTSignalBGColor
     internal:                                 ${sub_hide_dev}
-  # ---------------------------------------------------------------------------  
-  # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 bluetooth signal widget
-  #   in the web interface
+  # ---------------------------------------------------------------------------   
+    # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 temp widget
+    #   in the web interface
   - platform:                                 template
-    name:                                     (DEV)  Display - Sensor 2 BT Level Color
+    name:                                     (DEV)  Display - Sensor 1 Temp BG Color
+    id:                                       sensor1TempBGColor
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------  
+    # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 bluetooth signal widget
+    #   in the web interface
+  - platform:                                 template
+    name:                                     (DEV)  Display - Sensor 2 Level BG Color
     id:                                       sensor2LvlBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------  
-  # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 battery level widget
-  #   in the web interface
+    # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 battery level widget
+    #   in the web interface
   - platform:                                 template
-    name:                                     (DEV)  Display - Sensor 1 Battery Level Color
+    name:                                     (DEV)  Display - Sensor 2 Battery BG Color
     id:                                       sensor2BattBGColor
     internal:                                 ${sub_hide_dev}
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 battery level widget
-  #   in the web interface
+    #   in the web interface
   - platform:                                 template
-    name:                                     (DEV)  Display - Sensor 2 Battery Level Color
+    name:                                     (DEV)  Display - Sensor 2 ST Signal BG Color
     id:                                       sensor2BTSignalBGColor
+    internal:                                 ${sub_hide_dev}
+  # ---------------------------------------------------------------------------   
+    # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 temp widget
+    #   in the web interface
+  - platform:                                 template
+    name:                                     (DEV)  Display - Sensor 2 Temp BG Color
+    id:                                       sensor2TempBGColor
     internal:                                 ${sub_hide_dev}
 
 #*****************************************************************************# 
@@ -673,6 +703,7 @@ script:
   - id:                                       on_boot
     then:
       - logger.log:                           "System bootup underway..."
+      - script.execute:                       pageWelcome
       - switch.turn_on:                       backlight
       - switch.turn_on:                       refreshEnabled
       - script.execute:                       screenTimer
@@ -680,9 +711,10 @@ script:
           id:                                 version
           state:                              ${sub_code_version}
       - lambda: |-
-                  display->tft.fillScreen(TFT_BLACK);
                   id(sensor1HasError).publish_state(false);
+                  id(sensor1IsConnected).publish_state(false);
                   id(sensor2HasError).publish_state(false);
+                  id(sensor2IsConnected).publish_state(false);
   # ---------------------------------------------------------------------------
   - id:                                       screenTimer
     mode:                                     restart
@@ -843,6 +875,8 @@ script:
           float btsignal2 =         id(sensor2BTSignal).state;
           float level1 =            id(sensor1LPLevel).state;
           float level2 =            id(sensor2LPLevel).state;
+          float temp1 =             id(sensor1Temp).state;
+          float temp2 =             id(sensor2Temp).state;
 
           //  Build common page layout - two rows
               display->tft.fillScreen(TFT_BLACK);
@@ -877,7 +911,12 @@ script:
                 display->tft.fillRoundRect(5, yLine2 - 8, 151, 20, 5, id(sensor1BTSignalBGColor).state);
                 display->tft.drawString("BT Signal:", xLoffset, yLine2);
                 display->tft.setTextDatum(MR_DATUM);
-                display->tft.drawFloat(btsignal1,0, xCLoffset-37, yLine2); 
+                //display->tft.drawFloat(btsignal1,0, xCLoffset-37, yLine2); 
+                if (btsignal1 <=0 && btsignal1 >= -100) {
+                  display->tft.drawFloat(btsignal1,0, xCLoffset-37, yLine2); 
+                } else {
+                  display->tft.drawString("--", xCLoffset-37, yLine2); 
+                }
                 display->tft.drawString("dBm", xCLoffset, yLine2); 
                 display->tft.setTextColor(TFT_WHITE, TFT_BLACK);   
 
@@ -887,7 +926,12 @@ script:
                 display->tft.fillRoundRect(5, yLine3 - 8, 151, 20, 5, id(sensor1BattBGColor).state); 
                 display->tft.drawString("Battery:", xLoffset, yLine3);
                 display->tft.setTextDatum(MR_DATUM);
-                display->tft.drawFloat(batt1,0, xCLoffset-17, yLine3); 
+                //display->tft.drawFloat(batt1,0, xCLoffset-17, yLine3); 
+                if (batt1 >= 0 && batt1 <= 100) {
+                  display->tft.drawFloat(batt1,0, xCLoffset-17, yLine3); 
+                } else {
+                  display->tft.drawString("--", xCLoffset-17, yLine3); 
+                }
                 display->tft.drawString("%", xCLoffset, yLine3); 
                 display->tft.setTextColor(TFT_WHITE, TFT_BLACK);       
               
@@ -922,7 +966,12 @@ script:
                 display->tft.fillRoundRect(xCenter + 5, yLine2 - 8, 151, 20, 5, id(sensor2BTSignalBGColor).state);
                 display->tft.drawString("BT Signal:", xCRoffset, yLine2);
                 display->tft.setTextDatum(MR_DATUM);
-                display->tft.drawFloat(btsignal2,0, xRoffset-37, yLine2); 
+                //display->tft.drawFloat(btsignal2,0, xRoffset-37, yLine2); 
+                if (btsignal2 <=0 && btsignal2 >= -100) {
+                  display->tft.drawFloat(btsignal2,0, xRoffset-37, yLine2); 
+                } else {
+                  display->tft.drawString("--", xRoffset-37, yLine2); 
+                }
                 display->tft.drawString("dBm", xRoffset, yLine2); 
                 display->tft.setTextColor(TFT_WHITE, TFT_BLACK); 
             
@@ -933,7 +982,12 @@ script:
                 display->tft.drawString("Battery:", xCRoffset, yLine3);
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("%", xRoffset, yLine3); 
-                display->tft.drawFloat(batt2,0, xRoffset-17, yLine3); 
+                if (batt2 >= 0 && batt2 <= 100) {
+                  display->tft.drawFloat(batt2,0, xRoffset-17, yLine3); 
+                } else {
+                  display->tft.drawString("--", xRoffset-17, yLine3); 
+                }
+                
                 display->tft.setTextColor(TFT_WHITE, TFT_BLACK);  
 
             // Build the column 2 "Temp" line
@@ -988,6 +1042,61 @@ script:
           display->tft.setTextDatum(TC_DATUM);
           display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
           display->tft.drawString("Network Info",160, 10);
+          display->tft.setTextDatum(TL_DATUM);
+          display->tft.setFreeFont(FMB9);
+          display->tft.drawString("MAC Addr:",xLoffset,yLine0);
+          display->tft.drawString("WiFi Network:",xLoffset,yLine1);
+          display->tft.drawString("WiFi Strength:",xLoffset,yLine2);
+          display->tft.drawString("IP Address:",xLoffset,yLine3);
+          display->tft.drawString("Uptime:",xLoffset,yLine4);
+          display->tft.drawString("Code Version:",xLoffset,yLine5);
+          
+          display->tft.setTextDatum(TR_DATUM);
+          display->tft.drawString(id(host_mac).state.c_str(),xRoffset, yLine0);
+          if (!wifi::global_wifi_component->is_connected()) {
+            display->tft.drawString("Not Connected",xRoffset, yLine1);
+            display->tft.drawString("Not Connected",xRoffset, yLine2);
+            display->tft.drawString("Not Connected",xRoffset, yLine3);
+          } else {
+            display->tft.drawString(id(host_ssid).state.c_str(),xRoffset, yLine1);
+            display->tft.drawString("dBm",xRoffset, yLine2);
+            display->tft.drawFloat(id(${sub_esphome_name}_wifi_signal).state,0,xRoffset - 37, yLine2);
+            display->tft.drawString(id(host_ip).state.c_str(),xRoffset,yLine3);
+          }
+
+          
+          display->tft.drawString(id(uptime_f).state.c_str(),xRoffset,yLine4);
+          display->tft.drawString(id(version).state.c_str(),xRoffset,yLine5);
+  # ---------------------------------------------------------------------------
+  - id:                                       pageWelcome
+    mode:                                     restart
+    then:
+      - lambda: |-
+          int yLine0 =              48;
+          int yLine1 =              68;
+          int yLine2 =              88;
+          int yLine3 =              108;
+          int yLine4 =              128;
+          int yLine5 =              148;
+          int yHLine =              35;
+          int xCenter =             160;
+          int xLoffset =            10;
+          int xRoffset =            310;
+          int xCol1Center =         80;
+          int xCol2Center =         240;
+          int xCRoffset =           xCenter - 10;
+          int xCLoffset =           xCenter + 10;
+          int colYOffset =          40;
+
+          display->tft.fillScreen(TFT_BLACK);
+          display->tft.setRotation(1);
+          display->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);       
+          display->tft.drawFastHLine(0, yHLine, 320, TFT_RED);
+
+          display->tft.setFreeFont(FMB12);
+          display->tft.setTextDatum(TC_DATUM);
+          display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+          display->tft.drawString("Welcome",160, 10);
           display->tft.setTextDatum(TL_DATUM);
           display->tft.setFreeFont(FMB9);
           display->tft.drawString("MAC Addr:",xLoffset,yLine0);
