@@ -750,9 +750,9 @@ script:
     mode:                                     restart
     then:
       - lambda: |-
-          static script::Script *scripts[] = {id(pageBuild1), id(pageBuild2), id(pageBuild3)};
-          int current_page = id(pageCurrent).state;
-          scripts[current_page]->execute();
+              static script::Script<> *scripts[]  = {id(pageBuild1), id(pageBuild2), id(pageBuild3)};
+              int current_page = id(pageCurrent).state;
+              scripts[current_page]->execute();
   # ---------------------------------------------------------------------------
   - id:                                       pageBuild1
     mode:                                     restart
