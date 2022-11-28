@@ -764,15 +764,11 @@ script:
   - id:                                       pageRefresh
     mode:                                     restart
     then:
-<<<<<<< HEAD
        if:
         condition:
           - switch.is_off:                      deviceShowWelcome
         then:
           - lambda: |-
-=======
-      - lambda: |-
->>>>>>> 875626b007a03b73fc51d763ce08522d6b643263
               static script::Script<> *scripts[]  = {id(pageBuild1), id(pageBuild2), id(pageBuild3)};
               int current_page = id(pageCurrent).state;
               scripts[current_page]->execute();
