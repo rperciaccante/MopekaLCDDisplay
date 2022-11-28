@@ -25,9 +25,9 @@ substitutions:
   sub_ota_password:                           !secret esp_ota_pass
 
   sub_sensor1_name:                           "Sensor 1"
-  sub_sensor1_tank_type:                      "30LB_V" #Found device F8:DE:AA:BF:F7:0A RSSI=-49
-  sub_sensor1_mac:                            "F8:DE:AA:BF:F7:0A" # This is the Lippert Sesor
-  #sub_sensor1_mac:                            "F6:CC:9C:06:F6:F9"
+  sub_sensor1_tank_type:                      "30LB_V" 
+  sub_sensor1_mac:                            "F8:DE:AA:BF:F7:0A" # Lippert Sensor
+  #sub_sensor1_mac:                            "F6:CC:9C:06:F6:F9" # Mopeka Sensor
   sub_sensor1_id:                             "tank1"
 
   sub_sensor2_name:                           "Sensor 2"
@@ -68,8 +68,10 @@ custom_component:
       return {display};
   id: displayComponent
 
+#*****************************************************************************#
+# Since the ESPHome component does not support the Lippert propane sensors 
+# natively, this adds support
 external_components:
-  # use updated mopeka_pro_check to include support for Lippert sensors
   - source:
       type: git
       url: https://github.com/rperciaccante/esphome
@@ -970,7 +972,7 @@ script:
                 display->tft.drawString("Level:", xLoffset, yLine5); 
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("%", xCLoffset, yLine5);
-                if (level1 <= 100) {
+                if (level1 <= 100 && level1 >= 0) {
                   display->tft.drawFloat(level1,0, xCLoffset-17, yLine5); 
                 } else  {
                   display->tft.drawString("--", xCLoffset-17, yLine5); 
@@ -1014,7 +1016,7 @@ script:
                 display->tft.drawString("Temp:", xCRoffset, yLine4);
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("°F", xRoffset, yLine4);
-                if ((id(sensor1Temp).state >= -50) && (id(sensor2Temp).state <= 150)) {
+                if ((id(sensor2Temp).state > -20) && (id(sensor2Temp).state <= 150)) {
                   display->tft.drawFloat((id(sensor2Temp).state * (9.0/5.0) + 32.0),0, xRoffset-17, yLine4);
                 } else {
                   display->tft.drawString("--", xRoffset-17, yLine4);
@@ -1025,7 +1027,7 @@ script:
                 display->tft.drawString("Level:", xCRoffset, yLine5);
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("%", xRoffset, yLine5);
-                if (level2 <= 100) {
+                if (level2 <= 100 && level2 >= 0) {
                   display->tft.drawFloat(level2,0, xRoffset-17, yLine5); 
                 } else  {
                   display->tft.drawString("--", xRoffset-17, yLine5); 
