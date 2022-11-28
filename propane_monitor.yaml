@@ -9,7 +9,7 @@ substitutions:
   # ---------------------------------------------------------------------------
   # Project Specific Substitutions
   sub_text_devicename:                        "PropaneMonitor" 
-  sub_esphome_name:                           propane_monitor
+  sub_esphome_name:                           propanemonitor
   sub_code_version:                           "2022.11.01"
   # Network and service related substitutions
   sub_wifi_ssid1:                             !secret esp_wifi_ssid1
@@ -495,6 +495,9 @@ sensor:
   - platform:                                 wifi_signal
     name:                                     ${sub_text_devicename} Device WiFi Signal
     id:                                       ${sub_esphome_name}_wifi_signal
+    unit_of_measurement:                      "dBm"
+    device_class:                             "signal_strength"
+    state_class:                              "measurement"
     entity_category:                          diagnostic
     update_interval:                          30s
   # ---------------------------------------------------------------------------
@@ -504,13 +507,25 @@ sensor:
     temperature:
       name:                                   ${sub_text_devicename} ${sub_sensor1_name} Temp
       id:                                     sensor1Temp 
+      unit_of_measurement:                    "°F"
+      device_class:                           "temperature"
+      state_class:                            "measurement"
+      accuracy_decimals:                      1
       on_value:
         then:
-          - lambda: |-
-              id(sensor2Batt).publish_state(id(sensor1Temp).state);
+         - lambda: |-
+                    float sensorTemp = id(sensor1Temp).state;
+                    if ((sensorTemp < -20) || (sensorTemp > 150)) {
+                      id(sensor1Temp).state = -99;
+                    } else {
+                      id(sensor1Temp).state = (sensorTemp * (9.0/5.0) + 32.0);
+                    }
     level:
       name:                                   ${sub_text_devicename} ${sub_sensor1_name} Level
       id:                                     sensor1LPLevel
+      unit_of_measurement:                    "%"
+      state_class:                            "measurement"
+      accuracy_decimals:                      1
       on_value:
         then:
           - sensor.template.publish:
@@ -521,6 +536,9 @@ sensor:
                         float orangeThreshold =   40;
                         float yellowThreshold =   60;
                         float greenThreshold =    80;
+                        if (checkValue > 100 && checkValue < 0) {
+                          id(sensor1LPLevel).state = 99;
+                        }
 
                         if ((checkValue > redThreshold) && (checkValue <= orangeThreshold)){
                           return display->tft.color565(255, 180, 0);           // orange
@@ -536,6 +554,10 @@ sensor:
     battery_level:
       name:                                   ${sub_text_devicename} ${sub_sensor1_name} Battery
       id:                                     sensor1Batt
+      unit_of_measurement:                    "%"
+      device_class:                           "battery"
+      state_class:                            "measurement"
+      accuracy_decimals:                      1
       on_value:
         then:
           - sensor.template.publish:
@@ -559,9 +581,25 @@ sensor:
     temperature:
       name:                                   ${sub_text_devicename} ${sub_sensor2_name} Temp
       id:                                     sensor2Temp
+      unit_of_measurement:                    "°F"
+      device_class:                           "temperature"
+      state_class:                            "measurement"
+      accuracy_decimals:                      1
+      on_value:
+        then:
+         - lambda: |-
+                    float sensorTemp = id(sensor2Temp).state;
+                    if ((sensorTemp < -20) || (sensorTemp > 150)) {
+                      id(sensor2Temp).state = -99;
+                    } else {
+                      id(sensor2Temp).state = (sensorTemp * (9.0/5.0) + 32.0);
+                    }
     level:
       name:                                   ${sub_text_devicename} ${sub_sensor2_name} Level
       id:                                     sensor2LPLevel
+      unit_of_measurement:                    "%"
+      state_class:                            "measurement"
+      accuracy_decimals:                      1
       on_value:
         then:
           - sensor.template.publish:
@@ -587,6 +625,10 @@ sensor:
     battery_level:
       name:                                   ${sub_text_devicename} ${sub_sensor2_name} Battery
       id:                                     sensor2Batt
+      unit_of_measurement:                    "%"
+      device_class:                           "battery"
+      state_class:                            "measurement"
+      accuracy_decimals:                      1
       on_value:
         then:
           - sensor.template.publish:
@@ -609,7 +651,11 @@ sensor:
     mac_address:                              ${sub_sensor1_mac}
     name:                                     ${sub_text_devicename} ${sub_sensor1_name} BLE RSSI
     id:                                       sensor1BTSignal
+    unit_of_measurement:                      "dBm"
+    device_class:                             "signal_strength"
+    state_class:                              "measurement"
     entity_category:                          diagnostic
+    accuracy_decimals:                        1
     icon:                                     mdi:signal
     on_value:
       then:
@@ -633,7 +679,10 @@ sensor:
     mac_address:                              ${sub_sensor2_mac}
     name:                                     ${sub_text_devicename} ${sub_sensor2_name} BLE RSSI
     id:                                       sensor2BTSignal
-    entity_category:                          diagnostic              
+    unit_of_measurement:                      "dBm"
+    device_class:                             "signal_strength"
+    state_class:                              "measurement"
+    entity_category:                          diagnostic            
     icon:                                     mdi:signal
     on_value:
       then:
@@ -961,8 +1010,8 @@ script:
                 display->tft.drawString("Temp:", xLoffset, yLine4);
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("°F", xCLoffset, yLine4);
-                if ((id(sensor1Temp).state >= -50) && (id(sensor1Temp).state <= 150)) {
-                  display->tft.drawFloat((id(sensor1Temp).state * (9.0/5.0) + 32.0),0, xCLoffset-17, yLine4);
+                if ((id(sensor1Temp).state != -99) ){
+                  display->tft.drawFloat(id(sensor1Temp).state, 0, xCLoffset-17, yLine4);
                 } else {
                   display->tft.drawString("--", xCLoffset-17, yLine4);
                 }
