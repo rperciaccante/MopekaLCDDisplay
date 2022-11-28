@@ -8,7 +8,7 @@ substitutions:
   sub_hide_dev:                               "true"
   # ---------------------------------------------------------------------------
   # Project Specific Substitutions
-  sub_text_devicename:                        "Propane Monitor" 
+  sub_text_devicename:                        "PropaneMonitor" 
   sub_esphome_name:                           propane_monitor
   sub_code_version:                           "2022.11.01"
   # Network and service related substitutions
@@ -25,8 +25,9 @@ substitutions:
   sub_ota_password:                           !secret esp_ota_pass
 
   sub_sensor1_name:                           "Sensor 1"
-  sub_sensor1_tank_type:                      "30LB_V"
-  sub_sensor1_mac:                            "F6:CC:9C:06:F6:F9"
+  sub_sensor1_tank_type:                      "30LB_V" #Found device F8:DE:AA:BF:F7:0A RSSI=-49
+  sub_sensor1_mac:                            "F8:DE:AA:BF:F7:0A" # This is the Lippert Sesor
+  #sub_sensor1_mac:                            "F6:CC:9C:06:F6:F9"
   sub_sensor1_id:                             "tank1"
 
   sub_sensor2_name:                           "Sensor 2"
@@ -57,15 +58,23 @@ esp32:
   board: esp32-s3-devkitc-1
   variant: esp32s3
   framework:
-    type: arduino
-    version: 2.0.3
-    platform_version: 5.0.0
+     type: arduino
+     version: 2.0.3
+     platform_version: 5.0.0
 #*****************************************************************************#
 custom_component:
   lambda: |-
       App.register_component(display);
       return {display};
   id: displayComponent
+
+external_components:
+  # use updated mopeka_pro_check to include support for Lippert sensors
+  - source:
+      type: git
+      url: https://github.com/rperciaccante/esphome
+      #ref: dev
+    components: [ mopeka_pro_check ]
 #*****************************************************************************#
 # Default is DEBUG, set to WARN to keep things easier to manage installation
 # and general use - can be changed as needed  - https://esphome.io/components/logger.html
@@ -102,7 +111,7 @@ api:
 #*****************************************************************************#
 web_server: 
   port:                                       ${sub_web_server_port}
-  js_include:                                 "./css/v2/www.js"
+  js_include:                                 "./css/V2/www.js"
   js_url:                                     ""
   version:                                    2
   auth:
@@ -129,6 +138,7 @@ interval:
 #*****************************************************************************#
 # Binary Sensors                    
 binary_sensor:
+  # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 connection status
     #   in the web interface
   - platform:                                 template
@@ -703,10 +713,14 @@ script:
   - id:                                       on_boot
     then:
       - logger.log:                           "System bootup underway..."
+      - switch.turn_on:                       deviceShowWelcome
+      - delay:                                500ms
       - script.execute:                       pageWelcome
       - switch.turn_on:                       backlight
       - switch.turn_on:                       refreshEnabled
       - script.execute:                       screenTimer
+      - delay:                                5s
+      - switch.turn_off:                      deviceShowWelcome
       - text_sensor.template.publish:
           id:                                 version
           state:                              ${sub_code_version}
@@ -714,7 +728,8 @@ script:
                   id(sensor1HasError).publish_state(false);
                   id(sensor1IsConnected).publish_state(false);
                   id(sensor2HasError).publish_state(false);
-                  id(sensor2IsConnected).publish_state(false);
+                  id(sensor2IsConnected).publish_state(false); 
+                  //id(deviceShowWelcome).publish_state(true);
   # ---------------------------------------------------------------------------
   - id:                                       screenTimer
     mode:                                     restart
@@ -749,10 +764,14 @@ script:
   - id:                                       pageRefresh
     mode:                                     restart
     then:
-      - lambda: |-
-          static script::Script *scripts[] = {id(pageBuild1), id(pageBuild2), id(pageBuild3)};
-          int current_page = id(pageCurrent).state;
-          scripts[current_page]->execute();
+       if:
+        condition:
+          - switch.is_off:                      deviceShowWelcome
+        then:
+          - lambda: |-
+              static script::Script<> *scripts[]  = {id(pageBuild1), id(pageBuild2), id(pageBuild3)};
+              int current_page = id(pageCurrent).state;
+              scripts[current_page]->execute();
   # ---------------------------------------------------------------------------
   - id:                                       pageBuild1
     mode:                                     restart
@@ -1071,7 +1090,12 @@ script:
   - id:                                       pageWelcome
     mode:                                     restart
     then:
+      - logger.log:                 "Running Welcome Page"
       - lambda: |-
+          int xWidth =              display->tft.width();
+          int yHeight =             display->tft.height();
+          int xCenter =             160; //xWidth / 2;
+          int yCenter =             yHeight / 2;
           int yLine0 =              48;
           int yLine1 =              68;
           int yLine2 =              88;
@@ -1079,7 +1103,6 @@ script:
           int yLine4 =              128;
           int yLine5 =              148;
           int yHLine =              35;
-          int xCenter =             160;
           int xLoffset =            10;
           int xRoffset =            310;
           int xCol1Center =         80;
@@ -1097,31 +1120,15 @@ script:
           display->tft.setTextDatum(TC_DATUM);
           display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
           display->tft.drawString("Welcome",160, 10);
-          display->tft.setTextDatum(TL_DATUM);
-          display->tft.setFreeFont(FMB9);
-          display->tft.drawString("MAC Addr:",xLoffset,yLine0);
-          display->tft.drawString("WiFi Network:",xLoffset,yLine1);
-          display->tft.drawString("WiFi Strength:",xLoffset,yLine2);
-          display->tft.drawString("IP Address:",xLoffset,yLine3);
-          display->tft.drawString("Uptime:",xLoffset,yLine4);
-          display->tft.drawString("Code Version:",xLoffset,yLine5);
-          
-          display->tft.setTextDatum(TR_DATUM);
-          display->tft.drawString(id(host_mac).state.c_str(),xRoffset, yLine0);
-          if (!wifi::global_wifi_component->is_connected()) {
-            display->tft.drawString("Not Connected",xRoffset, yLine1);
-            display->tft.drawString("Not Connected",xRoffset, yLine2);
-            display->tft.drawString("Not Connected",xRoffset, yLine3);
-          } else {
-            display->tft.drawString(id(host_ssid).state.c_str(),xRoffset, yLine1);
-            display->tft.drawString("dBm",xRoffset, yLine2);
-            display->tft.drawFloat(id(${sub_esphome_name}_wifi_signal).state,0,xRoffset - 37, yLine2);
-            display->tft.drawString(id(host_ip).state.c_str(),xRoffset,yLine3);
-          }
+          display->tft.setTextDatum(MC_DATUM);
+          display->tft.setFreeFont(FM9);
+          display->tft.drawString("For more information,",xCenter,yLine0);
+          display->tft.drawString("support, or suggestions",xCenter,yLine1);
+          display->tft.drawString("please visit the project",xCenter,yLine2);
+          display->tft.drawString("page at",xCenter,yLine3);
+          display->tft.drawString("http://bit.ly/MopekaDisplay",xCenter,yLine5);
+          //
 
-          
-          display->tft.drawString(id(uptime_f).state.c_str(),xRoffset,yLine4);
-          display->tft.drawString(id(version).state.c_str(),xRoffset,yLine5);
   # ---------------------------------------------------------------------------
   - id:                                       displayRotationStatus
     then:
@@ -1208,7 +1215,13 @@ switch:
     id:                                       platform_restart
     internal:                                 true
     icon:                                     mdi:power
-
+  # ----------------------------------------------------------------
+  - platform:                                 template
+    id:                                       deviceShowWelcome
+    name:                                     (DEV) State - Show Welcome Message
+    internal:                                 false #${sub_hide_dev}
+    restore_state:                            ON
+    optimistic:                               true
 #*****************************************************************************#
 #  Text-Sensors 
 text_sensor:
