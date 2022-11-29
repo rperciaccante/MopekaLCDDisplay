@@ -10,7 +10,7 @@ substitutions:
   # Project Specific Substitutions
   sub_text_devicename:                        "PropaneMonitor" 
   sub_esphome_name:                           propanemonitor
-  sub_code_version:                           "2022.11.01"
+  sub_code_version:                           "2022.12.01"
   # Network and service related substitutions
   sub_wifi_ssid1:                             !secret esp_wifi_ssid1
   sub_wifi_password1:                         !secret esp_wifi_pass1
@@ -26,7 +26,7 @@ substitutions:
 
   sub_sensor1_name:                           "Sensor 1"
   sub_sensor1_tank_type:                      "30LB_V" 
-  sub_sensor1_mac:                            "F8:DE:AA:BF:F7:0A" # Lippert Sensor
+  sub_sensor1_mac:                            "F8:DE:AA:BF:F7:0B" # Lippert Sensor
   #sub_sensor1_mac:                            "F6:CC:9C:06:F6:F9" # Mopeka Sensor
   sub_sensor1_id:                             "tank1"
 
@@ -136,6 +136,7 @@ interval:
             switch.is_on:                     refreshEnabled
           then:
             - number.increment:               pageCurrent
+      
 
 #*****************************************************************************#
 # Binary Sensors                    
@@ -213,6 +214,7 @@ binary_sensor:
         - switch.turn_off:                    refreshEnabled
         - number.increment:                   pageCurrent
         - script.execute:                     pageRefresh
+        
     - min_length:                             1000ms
       max_length:                             2000ms
       then:
@@ -243,13 +245,8 @@ binary_sensor:
         - script.execute:                     screenTimer
         - switch.turn_on:                     backlight
         - switch.toggle:                      screensaver
-        #- switch.turn_off:                    refreshEnabled
-        #- script.execute:                     pageRefresh
-        #- script.stop:                        pageRefresh
         - script.execute:                     displayScreensaverStatus
         - delay:                              3s
-        #- switch.turn_on:                     refreshEnabled
-        #- script.execute:                     pageRefresh
 
 #*****************************************************************************#
 # Buttons 
@@ -510,22 +507,22 @@ sensor:
       unit_of_measurement:                    "°F"
       device_class:                           "temperature"
       state_class:                            "measurement"
-      accuracy_decimals:                      1
+      accuracy_decimals:                      0
+      filters:
+        - lambda:                             return x * (9.0/5.0) + 32.0;
       on_value:
         then:
          - lambda: |-
                     float sensorTemp = id(sensor1Temp).state;
                     if ((sensorTemp < -20) || (sensorTemp > 150)) {
                       id(sensor1Temp).state = -99;
-                    } else {
-                      id(sensor1Temp).state = (sensorTemp * (9.0/5.0) + 32.0);
                     }
     level:
       name:                                   ${sub_text_devicename} ${sub_sensor1_name} Level
       id:                                     sensor1LPLevel
       unit_of_measurement:                    "%"
       state_class:                            "measurement"
-      accuracy_decimals:                      1
+      accuracy_decimals:                      0
       on_value:
         then:
           - sensor.template.publish:
@@ -536,8 +533,8 @@ sensor:
                         float orangeThreshold =   40;
                         float yellowThreshold =   60;
                         float greenThreshold =    80;
-                        if (checkValue > 100 && checkValue < 0) {
-                          id(sensor1LPLevel).state = 99;
+                        if (checkValue > 100 || checkValue < 0) {
+                          id(sensor1LPLevel).state = -99;
                         }
 
                         if ((checkValue > redThreshold) && (checkValue <= orangeThreshold)){
@@ -557,7 +554,7 @@ sensor:
       unit_of_measurement:                    "%"
       device_class:                           "battery"
       state_class:                            "measurement"
-      accuracy_decimals:                      1
+      accuracy_decimals:                      0
       on_value:
         then:
           - sensor.template.publish:
@@ -565,7 +562,9 @@ sensor:
               state:    !lambda |- 
                         float checkValue = id(sensor1Batt).state;
                         float greenThreshold = 50;
-
+                        if ((checkValue > 100) || (checkValue < 0)) {
+                          id(sensor1Batt).state = -99;
+                        } 
                         if ((checkValue >= greenThreshold)) {
                             id(sensor1BattError).publish_state(false);
                             return display->tft.color565(0, 0, 0);             // black
@@ -584,22 +583,22 @@ sensor:
       unit_of_measurement:                    "°F"
       device_class:                           "temperature"
       state_class:                            "measurement"
-      accuracy_decimals:                      1
+      accuracy_decimals:                      0
+      filters:
+        - lambda:                             return x * (9.0/5.0) + 32.0;
       on_value:
         then:
          - lambda: |-
                     float sensorTemp = id(sensor2Temp).state;
                     if ((sensorTemp < -20) || (sensorTemp > 150)) {
                       id(sensor2Temp).state = -99;
-                    } else {
-                      id(sensor2Temp).state = (sensorTemp * (9.0/5.0) + 32.0);
-                    }
+                    } 
     level:
       name:                                   ${sub_text_devicename} ${sub_sensor2_name} Level
       id:                                     sensor2LPLevel
       unit_of_measurement:                    "%"
       state_class:                            "measurement"
-      accuracy_decimals:                      1
+      accuracy_decimals:                      0
       on_value:
         then:
           - sensor.template.publish:
@@ -610,6 +609,10 @@ sensor:
                           float orangeThreshold = 40;
                           float yellowThreshold = 60;
                           float greenThreshold = 80;
+
+                          if ((checkValue > 100) || (checkValue < 0)) {
+                            id(sensor2LPLevel).state = -99;
+                          } 
 
                           if ((checkValue > redThreshold) && (checkValue <= orangeThreshold)){
                             return display->tft.color565(255, 180, 0);           // orange
@@ -628,7 +631,7 @@ sensor:
       unit_of_measurement:                    "%"
       device_class:                           "battery"
       state_class:                            "measurement"
-      accuracy_decimals:                      1
+      accuracy_decimals:                      0
       on_value:
         then:
           - sensor.template.publish:
@@ -636,6 +639,10 @@ sensor:
               state:    !lambda |- 
                 float checkValue = id(sensor2Batt).state;
                 float greenThreshold = 50;
+
+                if ((checkValue > 100) || (checkValue < 0)) {
+                      id(sensor2Batt).state = -99;
+                    } 
 
                 if ((checkValue >= greenThreshold)) {
                     id(sensor2BattError).publish_state(false);
@@ -655,7 +662,7 @@ sensor:
     device_class:                             "signal_strength"
     state_class:                              "measurement"
     entity_category:                          diagnostic
-    accuracy_decimals:                        1
+    accuracy_decimals:                        0
     icon:                                     mdi:signal
     on_value:
       then:
@@ -682,7 +689,8 @@ sensor:
     unit_of_measurement:                      "dBm"
     device_class:                             "signal_strength"
     state_class:                              "measurement"
-    entity_category:                          diagnostic            
+    entity_category:                          diagnostic      
+    accuracy_decimals:                        0      
     icon:                                     mdi:signal
     on_value:
       then:
@@ -773,13 +781,15 @@ script:
       - delay:                                5s
       - switch.turn_off:                      deviceShowWelcome
       - text_sensor.template.publish:
-          id:                                 version
+          id:                                 codeVersion
           state:                              ${sub_code_version}
       - lambda: |-
                   id(sensor1HasError).publish_state(false);
                   id(sensor1IsConnected).publish_state(false);
                   id(sensor2HasError).publish_state(false);
                   id(sensor2IsConnected).publish_state(false); 
+                  id(sensor1MACAddress).publish_state("${sub_sensor1_mac}"); 
+                  id(sensor2MACAddress).publish_state("${sub_sensor2_mac}"); 
                   //id(deviceShowWelcome).publish_state(true);
   # ---------------------------------------------------------------------------
   - id:                                       screenTimer
@@ -997,7 +1007,7 @@ script:
                 display->tft.drawString("Battery:", xLoffset, yLine3);
                 display->tft.setTextDatum(MR_DATUM);
                 //display->tft.drawFloat(batt1,0, xCLoffset-17, yLine3); 
-                if (batt1 >= 0 && batt1 <= 100) {
+                if (batt1 != -99) {
                   display->tft.drawFloat(batt1,0, xCLoffset-17, yLine3); 
                 } else {
                   display->tft.drawString("--", xCLoffset-17, yLine3); 
@@ -1010,8 +1020,8 @@ script:
                 display->tft.drawString("Temp:", xLoffset, yLine4);
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("°F", xCLoffset, yLine4);
-                if ((id(sensor1Temp).state != -99) ){
-                  display->tft.drawFloat(id(sensor1Temp).state, 0, xCLoffset-17, yLine4);
+                if ((temp1 != -99) ){
+                  display->tft.drawFloat(temp1, 0, xCLoffset-17, yLine4);
                 } else {
                   display->tft.drawString("--", xCLoffset-17, yLine4);
                 }
@@ -1052,7 +1062,7 @@ script:
                 display->tft.drawString("Battery:", xCRoffset, yLine3);
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("%", xRoffset, yLine3); 
-                if (batt2 >= 0 && batt2 <= 100) {
+                if (batt2 != -99) {
                   display->tft.drawFloat(batt2,0, xRoffset-17, yLine3); 
                 } else {
                   display->tft.drawString("--", xRoffset-17, yLine3); 
@@ -1065,8 +1075,8 @@ script:
                 display->tft.drawString("Temp:", xCRoffset, yLine4);
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("°F", xRoffset, yLine4);
-                if ((id(sensor2Temp).state > -20) && (id(sensor2Temp).state <= 150)) {
-                  display->tft.drawFloat((id(sensor2Temp).state * (9.0/5.0) + 32.0),0, xRoffset-17, yLine4);
+                if (temp2 != -99) {
+                  display->tft.drawFloat(temp2, 0, xRoffset-17, yLine4);
                 } else {
                   display->tft.drawString("--", xRoffset-17, yLine4);
                 }
@@ -1076,7 +1086,7 @@ script:
                 display->tft.drawString("Level:", xCRoffset, yLine5);
                 display->tft.setTextDatum(MR_DATUM);
                 display->tft.drawString("%", xRoffset, yLine5);
-                if (level2 <= 100 && level2 >= 0) {
+                if (level2 != -99) {
                   display->tft.drawFloat(level2,0, xRoffset-17, yLine5); 
                 } else  {
                   display->tft.drawString("--", xRoffset-17, yLine5); 
@@ -1136,7 +1146,7 @@ script:
 
           
           display->tft.drawString(id(uptime_f).state.c_str(),xRoffset,yLine4);
-          display->tft.drawString(id(version).state.c_str(),xRoffset,yLine5);
+          display->tft.drawString(id(codeVersion).state.c_str(),xRoffset,yLine5);
   # ---------------------------------------------------------------------------
   - id:                                       pageWelcome
     mode:                                     restart
@@ -1270,7 +1280,7 @@ switch:
   - platform:                                 template
     id:                                       deviceShowWelcome
     name:                                     (DEV) State - Show Welcome Message
-    internal:                                 false #${sub_hide_dev}
+    internal:                                 ${sub_hide_dev}
     restore_state:                            ON
     optimistic:                               true
 #*****************************************************************************#
@@ -1278,7 +1288,20 @@ switch:
 text_sensor:
   - platform:                                 template
     name:                                     ${sub_text_devicename} Device Code Version
-    id:                                       version
+    id:                                       codeVersion
+    entity_category:                          diagnostic
+  # ----------------------------------------------------------------
+  - platform:                                 template
+    name:                                     ${sub_text_devicename} ${sub_sensor1_name} Address
+    id:                                       sensor1MACAddress
+    entity_category:                          diagnostic
+    icon:                                     mdi:fingerprint
+  # ----------------------------------------------------------------
+  - platform:                                 template
+    name:                                     ${sub_text_devicename} ${sub_sensor2_name} Address
+    id:                                       sensor2MACAddress
+    entity_category:                          diagnostic
+    icon:                                     mdi:fingerprint
   # ----------------------------------------------------------------
   - platform:                                 wifi_info             
     ip_address:
