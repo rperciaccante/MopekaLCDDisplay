@@ -1,16 +1,16 @@
 
 substitutions:
   # If you are interested in this project, and you don't have any Mopeka sensors available,
-  # change 'sub_hide_dev' to "true".  This will enable components in the web portal that will allow
+  # change 'sub_show_dev' to "true".  This will enable components in the web portal that will allow
   # you to test out the different features as if you were connected to an actual sensor.  This is
   # very helpful if you are not at the same location as your sensors (for example, working on this 
   # as a winter project when your RV is in storage)
-  sub_hide_dev:                               "true"
+  sub_show_dev:                               "true"
   # ---------------------------------------------------------------------------
   # Project Specific Substitutions
   sub_text_devicename:                        "PropaneMonitor" 
   sub_esphome_name:                           propanemonitor
-  sub_code_version:                           "2022.12.01"
+  sub_code_version:                           "2022.11.6aff467"
   # Network and service related substitutions
   sub_wifi_ssid1:                             !secret esp_wifi_ssid1
   sub_wifi_password1:                         !secret esp_wifi_pass1
@@ -26,7 +26,7 @@ substitutions:
 
   sub_sensor1_name:                           "Sensor 1"
   sub_sensor1_tank_type:                      "30LB_V" 
-  sub_sensor1_mac:                            "F8:DE:AA:BF:F7:0B" # Lippert Sensor
+  sub_sensor1_mac:                            "F8:DE:AA:BF:F7:0A" # Lippert Sensor
   #sub_sensor1_mac:                            "F6:CC:9C:06:F6:F9" # Mopeka Sensor
   sub_sensor1_id:                             "tank1"
 
@@ -41,6 +41,10 @@ substitutions:
 #*****************************************************************************#
 esphome:
   name:                                       ${sub_esphome_name}
+  comment:                                    "Lippert integration with mopeka component"
+  project:
+    name: "rperciaccante.mopeka_pro_check"
+    version: "1.0.0"
   includes:
     - tdisplays3/tft_espi_display.h
     - tdisplays3/Free_Fonts.h
@@ -74,8 +78,8 @@ custom_component:
 external_components:
   - source:
       type: git
-      url: https://github.com/rperciaccante/esphome
-      #ref: dev
+      url: https://github.com/rperciaccante/esphome/
+      ref: mopeka_dev
     components: [ mopeka_pro_check ]
 #*****************************************************************************#
 # Default is DEBUG, set to WARN to keep things easier to manage installation
@@ -112,6 +116,7 @@ api:
   reboot_timeout:                             0s
 #*****************************************************************************#
 web_server: 
+  include_internal:                           ${sub_show_dev}
   port:                                       ${sub_web_server_port}
   js_include:                                 "./css/V2/www.js"
   js_url:                                     ""
@@ -147,56 +152,56 @@ binary_sensor:
   - platform:                                 template
     id:                                       sensor1IsConnected
     name:                                     (DEV) State - Sensor 1 Is Connected
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Error status
     #   in the web interface
   - platform:                                 template
     id:                                       sensor1HasError
     name:                                     (DEV) Error - Sensor 1
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Battery Error status
     #   in the web interface
   - platform:                                 template
     id:                                       sensor1BattError
     name:                                     (DEV) Error - Sensor 1 Battery
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Bluetooth Signal Error status
     #   in the web interface
   - platform:                                 template
     id:                                       sensor1BTSignalError
     name:                                     (DEV) Error - Sensor 1 BT Signal
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 2 connection status
     #   in the web interface
   - platform:                                 template
     id:                                       sensor2IsConnected
     name:                                     (DEV) State - Sensor 2 Is Connected
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 2 Error status
     #   in the web interface
   - platform:                                 template
     id:                                       sensor2HasError
     name:                                     (DEV) Error - Sensor 2 
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 2 Battery Error status
     #   in the web interface
   - platform:                                 template
     id:                                       sensor2BattError
     name:                                     (DEV) Error - Sensor 2 Battery
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will allow you to see the status of the Sensor 1 Bluetooth Signal Error status
     #   in the web interface
   - platform:                                 template
     id:                                       sensor2BTSignalError
     name:                                     (DEV) Error - Sensor 2 Battery
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------
   - platform:                                 gpio
     pin:
@@ -264,7 +269,7 @@ button:
   - platform:                                 template
     name:                                     (DEV) Device - Trigger Screensaver Timeout
     id:                                       triggerScreensaver
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     on_press:
       then:
         - script.execute:                     screenTimer
@@ -274,7 +279,7 @@ button:
   - platform:                                 template
     name:                                     (DEV) Page - Refresh Current
     id:                                       rotatePage
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     on_press:
       then:
         - script.execute:                     pageRefresh
@@ -283,7 +288,7 @@ button:
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Page 1
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     on_press:
       then:
         - script.execute:                     pageBuild1
@@ -292,7 +297,7 @@ button:
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Page 2
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     on_press:
       then:
         - script.execute:                     pageBuild2
@@ -301,7 +306,7 @@ button:
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Page 3
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     on_press:
       then:
         - script.execute:                     pageBuild3
@@ -310,7 +315,7 @@ button:
       #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Scroll Status
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     on_press:
       then:
         - script.execute:                     displayRotationStatus
@@ -320,7 +325,7 @@ button:
       #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Page - Show Screensaver Status
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     on_press:
       then:
         - script.execute:                     displayScreensaverStatus
@@ -332,9 +337,9 @@ number:
     # When sub_hide_dev is enabled, this will allow you to change the page currenty displayed on the LCD
     #   in the web interface
   - platform:                                 template
-    name:                                     (DEV) Current Page
+    name:                                     Current Page
     id:                                       pageCurrent
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            0
     min_value:                                0
@@ -347,7 +352,7 @@ number:
   - platform:                                 template
     name:                                     (DEV) LP Level - Sensor 1
     id:                                       dev_sensor1LPLevel
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            -1
     min_value:                                -1
@@ -364,7 +369,7 @@ number:
   - platform:                                 template
     name:                                     (DEV) LP Level - Sensor 2
     id:                                       dev_sensor2LPLevel
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            -1
     min_value:                                -1
@@ -381,7 +386,7 @@ number:
   - platform:                                 template
     name:                                     (DEV) Battery - Sensor 1 
     id:                                       dev_sensor1Batt
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            -1
     min_value:                                -1
@@ -398,7 +403,7 @@ number:
   - platform:                                 template
     name:                                     (DEV) Battery - Sensor 2
     id:                                       dev_sensor2Batt
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            -1
     min_value:                                -1
@@ -416,7 +421,7 @@ number:
   - platform:                                 template
     name:                                     (DEV) Temp - Sensor 1
     id:                                       dev_sensor1Temp
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            -50
     min_value:                                -50
@@ -434,7 +439,7 @@ number:
   - platform:                                 template
     name:                                     (DEV) Temp - Sensor 2
     id:                                       dev_sensor2Temp
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            -50
     min_value:                                -50
@@ -452,7 +457,7 @@ number:
   - platform:                                 template
     name:                                     (DEV) BT Signal - Sensor 1
     id:                                       dev_sensor1BTSignal
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            1
     min_value:                                -100
@@ -469,7 +474,7 @@ number:
   - platform:                                 template
     name:                                     (DEV) BT Signal - Sensor 2
     id:                                       dev_sensor2BTSignal
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     optimistic:                               true
     initial_value:                            1
     min_value:                                -100
@@ -700,6 +705,10 @@ sensor:
                         float checkValue = id(sensor2BTSignal).state;
                         float redThreshold = -80;
 
+                        if ((checkValue < -98) || (checkValue >= 0)) {
+                          id(sensor2BTSignal).state = -99;
+                        } 
+
                         if ((checkValue > redThreshold) && (checkValue < 0)) {
                             id(sensor2BTSignalError).publish_state(false);
                             return display->tft.color565(0, 0, 0);             // black
@@ -715,56 +724,56 @@ sensor:
   - platform:                                 template
     name:                                     (DEV) Display - Sensor 1 LP Level BG Color
     id:                                       sensor1LvlBGColor
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------  
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 level widget
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV) Display - Sensor 1 Battery BG Color
     id:                                       sensor1BattBGColor
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------   
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 bluetooth signal widget
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 1 BT Signal BG Color
     id:                                       sensor1BTSignalBGColor
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------   
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 temp widget
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 1 Temp BG Color
     id:                                       sensor1TempBGColor
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------  
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 bluetooth signal widget
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 2 Level BG Color
     id:                                       sensor2LvlBGColor
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------  
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 1 battery level widget
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 2 Battery BG Color
     id:                                       sensor2BattBGColor
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 battery level widget
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 2 ST Signal BG Color
     id:                                       sensor2BTSignalBGColor
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
   # ---------------------------------------------------------------------------   
     # When sub_hide_dev is enabled, this will display the background color used for the sensor 2 temp widget
     #   in the web interface
   - platform:                                 template
     name:                                     (DEV)  Display - Sensor 2 Temp BG Color
     id:                                       sensor2TempBGColor
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
 
 #*****************************************************************************# 
 # Scripts 
@@ -992,7 +1001,7 @@ script:
                 display->tft.drawString("BT Signal:", xLoffset, yLine2);
                 display->tft.setTextDatum(MR_DATUM);
                 //display->tft.drawFloat(btsignal1,0, xCLoffset-37, yLine2); 
-                if (btsignal1 <=0 && btsignal1 >= -100) {
+                if (btsignal1 != -99) {
                   display->tft.drawFloat(btsignal1,0, xCLoffset-37, yLine2); 
                 } else {
                   display->tft.drawString("--", xCLoffset-37, yLine2); 
@@ -1047,7 +1056,7 @@ script:
                 display->tft.drawString("BT Signal:", xCRoffset, yLine2);
                 display->tft.setTextDatum(MR_DATUM);
                 //display->tft.drawFloat(btsignal2,0, xRoffset-37, yLine2); 
-                if (btsignal2 <=0 && btsignal2 >= -100) {
+                if (btsignal2 != -99) {
                   display->tft.drawFloat(btsignal2,0, xRoffset-37, yLine2); 
                 } else {
                   display->tft.drawString("--", xRoffset-37, yLine2); 
@@ -1280,7 +1289,7 @@ switch:
   - platform:                                 template
     id:                                       deviceShowWelcome
     name:                                     (DEV) State - Show Welcome Message
-    internal:                                 ${sub_hide_dev}
+    internal:                                 true
     restore_state:                            ON
     optimistic:                               true
 #*****************************************************************************#
