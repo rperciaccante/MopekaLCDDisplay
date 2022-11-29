@@ -4,7 +4,7 @@ Like may owners of RV's, I hate running out of propane - this means no heat, no 
 
 ### Functional Purpose:
 This device serves a number of potential purposes:
-1) When you wish to monitor your propane tank levels without an app and without Home Assistat integration, you can mount this in your kitchen\monitor panel to keep an eye on tank levels visually.
+1) When you wish to monitor your propane tank levels without an app and without Home Assistat integration, you can mount this in your kitchen\monitor panel to keep an eye on tank levels visually (Note: this device must be mounted close enough to the sensors to be able to read the signal from the them).
 2) If you are using Home Assisant, you can integrate the sensor into Home Assistant using the ESPHome integration, or if you have Discovery enabled in Home Assistant, HA will identify it for you to configure.
 3) In the case where you are using Home Assistant and are unable to place the device in the cabin of your RV, this device can be mounted in a storage area closer to the tank sensors, and used as a way to relay information to HA, without the display as the primary interface.  In this case, you can use the screensaver option to turn off the screen when not specifically in use.
 
