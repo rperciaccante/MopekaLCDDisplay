@@ -34,3 +34,4 @@
 secrets.yaml
 .esphome*
 hold
+logs/

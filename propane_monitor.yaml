@@ -10,7 +10,7 @@ substitutions:
   # Project Specific Substitutions
   sub_text_devicename:                        "PropaneMonitor" 
   sub_esphome_name:                           propanemonitor
-  sub_code_version:                           "2022.11.6aff467"
+  sub_code_version:                           "2022.11.29"
   # Network and service related substitutions
   sub_wifi_ssid1:                             !secret esp_wifi_ssid1
   sub_wifi_password1:                         !secret esp_wifi_pass1
@@ -43,8 +43,8 @@ esphome:
   name:                                       ${sub_esphome_name}
   comment:                                    "Lippert integration with mopeka component"
   project:
-    name: "rperciaccante.mopeka_pro_check"
-    version: "1.0.0"
+    name:                                     "rperciaccante.mopeka_pro_check"
+    version:                                  ${sub_code_version}
   includes:
     - tdisplays3/tft_espi_display.h
     - tdisplays3/Free_Fonts.h
@@ -59,12 +59,12 @@ esphome:
       script.execute:                         on_boot
 #*****************************************************************************#
 esp32:
-  board: esp32-s3-devkitc-1
+  board: esp32s3box 
   variant: esp32s3
   framework:
-     type: arduino
-     version: 2.0.3
-     platform_version: 5.0.0
+      type: arduino
+      version: 2.0.3
+      platform_version: 5.0.0
 #*****************************************************************************#
 custom_component:
   lambda: |-
