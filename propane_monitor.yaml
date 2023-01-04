@@ -10,7 +10,7 @@ substitutions:
   # Project Specific Substitutions
   sub_text_devicename:                        "PropaneMonitor" 
   sub_esphome_name:                           propanemonitor
-  sub_code_version:                           "2022.11.29"
+  sub_code_version:                           "2022.12.9"
   # Network and service related substitutions
   sub_wifi_ssid1:                             !secret esp_wifi_ssid1
   sub_wifi_password1:                         !secret esp_wifi_pass1
@@ -24,15 +24,15 @@ substitutions:
   sub_ota_safe_mode:                          "true"
   sub_ota_password:                           !secret esp_ota_pass
 
-  sub_sensor1_name:                           "Sensor 1"
+  sub_sensor1_name:                           "Right Tank"
   sub_sensor1_tank_type:                      "30LB_V" 
-  sub_sensor1_mac:                            "F8:DE:AA:BF:F7:0A" # Lippert Sensor
+  sub_sensor1_mac:                            "FC:9A:FC:36:40:39" #"F8:DE:AA:BF:F7:0A" # Lippert Sensor
   #sub_sensor1_mac:                            "F6:CC:9C:06:F6:F9" # Mopeka Sensor
   sub_sensor1_id:                             "tank1"
 
-  sub_sensor2_name:                           "Sensor 2"
+  sub_sensor2_name:                           "Left Tank"
   sub_sensor2_tank_type:                      "30LB_V"
-  sub_sensor2_mac:                            "CC:9C:31:1E:75:8D"
+  sub_sensor2_mac:                            "C4:97:8F:93:3A:1B" #"CC:9C:31:1E:75:8D"
   sub_sensor2_id:                             "tank2"
 
   ## Used for the configuration of the display screens
@@ -53,10 +53,13 @@ esphome:
     - FS
     - SPIFFS
     - tdisplays3=https://github.com/landonr/lilygo-tdisplays3-esphome.git
-  on_boot:                          
+  on_boot:               
     priority:                                 600
     then:
-      script.execute:                         on_boot
+      - lambda: |-
+          display->tft.fillScreen(TFT_BLACK);
+      - delay:                                200ms
+      - script.execute:                       on_boot
 #*****************************************************************************#
 esp32:
   board: esp32s3box 
@@ -85,9 +88,7 @@ external_components:
 # Default is DEBUG, set to WARN to keep things easier to manage installation
 # and general use - can be changed as needed  - https://esphome.io/components/logger.html
 logger:
-  level:                                      DEBUG
-  #logs:
-  #  ble_client: DEBUG
+  level:                                      WARN
 #*****************************************************************************#
 # Best practice is to use specific SSID/PASSWD in local secrets.yaml file.
 # For more information on the WiFi component: https://esphome.io/components/wifi.html
@@ -141,7 +142,15 @@ interval:
             switch.is_on:                     refreshEnabled
           then:
             - number.increment:               pageCurrent
-      
+
+#*****************************************************************************#
+# Global Variables
+globals:
+   - id:                                      displayWelcome
+     type:                                    bool
+     restore_value:                           no
+     initial_value:                           "true"
+
 
 #*****************************************************************************#
 # Binary Sensors                    
@@ -200,26 +209,81 @@ binary_sensor:
       inverted:                               true
     name:                                     ${sub_text_devicename} Page Next
     internal:                                 true
-    on_click:
-    - min_length:                             50ms
-      max_length:                             350ms
-      then:
-        - script.execute:                     screenTimer
-        - switch.turn_on:                     backlight
-        - switch.turn_off:                    refreshEnabled
-        - number.increment:                   pageCurrent
-        - script.execute:                     pageRefresh
-        
-    - min_length:                             1000ms
-      max_length:                             2000ms
-      then:
-        - script.execute:                     screenTimer
-        - switch.toggle:                      refreshEnabled
-        - switch.turn_on:                     backlight 
-        - script.stop:                        pageRefresh
-        - script.execute:                     displayRotationStatus
-        - delay:                              3s
-        - script.execute:                     pageRefresh
+    on_multi_click:
+      - timing:
+          - ON for at most 1s
+          - OFF for at most 1s
+          - ON for at most 1s
+          - OFF for at least 0.2s
+        then:
+          - logger.log: 
+              format: "Double Clicked"
+              level: warn
+          - logger.log:                         
+              format:                           "Screen rotation button pressed"
+              level:                              WARN
+          - script.execute:                     screenTimer
+          - switch.toggle:                      refreshEnabled
+          - switch.turn_on:                     backlight 
+          - script.stop:                        pageRefresh
+          - script.execute:                     displayRotationStatus
+          - delay:                              3s
+          - script.execute:                     pageRefresh
+      - timing:
+          - ON for 1s to 2s
+          - OFF for at least 0.5s
+        then:
+          - logger.log: 
+              format: "Single Long Clicked"
+              level: warn
+
+      - timing:
+          - ON for at most 1s
+          - OFF for at least 0.5s
+        then:
+          - logger.log: 
+              format: "Single Short Clicked"
+              level: warn
+          - logger.log:                         
+              format:                           "Next Page button pressed"
+              level:                            WARN
+          - script.execute:                     screenTimer
+          - switch.turn_on:                     backlight
+          - switch.turn_off:                    refreshEnabled
+          - number.increment:                   pageCurrent
+          - script.execute:                     pageRefresh
+    # on_click:
+    # - min_length:                             50ms
+    #   max_length:                             350ms
+    #   then:
+    #     - logger.log:                         
+    #         format:                           "Next Page button pressed"
+    #         level:                            WARN
+    #     - script.execute:                     screenTimer
+    #     - switch.turn_on:                     backlight
+    #     - switch.turn_off:                    refreshEnabled
+    #     - number.increment:                   pageCurrent
+    #     - script.execute:                     pageRefresh
+    # - min_length:                             1000ms
+    #   max_length:                             2000ms
+    #   then:
+    #     - logger.log:                         
+    #         format:                           "Screen rotation button pressed"
+    #         level:                              WARN
+    #     - script.execute:                     screenTimer
+    #     - switch.toggle:                      refreshEnabled
+    #     - switch.turn_on:                     backlight 
+    #     - script.stop:                        pageRefresh
+    #     - script.execute:                     displayRotationStatus
+    #     - delay:                              3s
+    #     - script.execute:                     pageRefresh
+    # on_double_click:
+    #   - min_length:                           50ms
+    #     max_length:                           350ms
+    #     then:
+    #       - logger.log:                         
+    #           format:                         "Double Click"
+    #           level:                          WARN
   # ---------------------------------------------------------------------------
   - id:                                       screen
     platform:                                 gpio
@@ -770,8 +834,6 @@ script:
     then:
       - logger.log:                           "System bootup underway..."
       - switch.turn_on:                       backlight
-      - lambda: |-
-                id(deviceShowWelcome).publish_state(true);
       - script.execute:                       pageWelcome
       - delay:                                500ms
       - switch.turn_on:                       refreshEnabled
@@ -790,14 +852,14 @@ script:
     mode:                                     restart
     then:
       - logger.log:
-          format:                             "Screen timeout script called"
+          format:                             "Screensaver timer started"
           level:                              WARN
       - if:
           condition:                 
             switch.is_on:                     screensaver
           then:
             - delay:                          60s
-            - logger.log:                     "Screen timeout reached"
+            - logger.log:                     "Screensaver timeout reached"
             - switch.turn_off:                backlight
   # ---------------------------------------------------------------------------
   - id:                                       errorCheck
@@ -1161,6 +1223,7 @@ script:
           int xCLoffset =           xCenter + 10;
           int colYOffset =          40;
 
+          display->spr.setTextSize(3);
           display->tft.fillScreen(TFT_BLACK);
           display->tft.setRotation(1);
           display->tft.drawRoundRect(0, 0, 320, 170, 10, TFT_RED);       
@@ -1179,8 +1242,9 @@ script:
           display->tft.drawString("http://bit.ly/MopekaDisplay",xCenter,yLine5);
           //
       - delay:      5s
-      - lambda: |-
-                id(deviceShowWelcome).publish_state(false);
+      - globals.set:
+          id: displayWelcome
+          value: 'false'
   # ---------------------------------------------------------------------------
   - id:                                       displayRotationStatus
     then:
