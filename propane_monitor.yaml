@@ -926,18 +926,22 @@ script:
           // Display page1 title
             display->tft.drawString("${sub_page1_title}",xCenter, yHLine / 2);
 
-          // If there is an error on sensor 1, display error indicator before heading
+          // If there is an error on sensor 1, display error indicator
+            display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            display->tft.drawString("${sub_sensor1_name}",xCol1Center ,yColHeaderCenter);
             if (id(sensor1HasError).state == true) {
               display->tft.setFreeFont(FSB9);
               display->tft.setTextColor(TFT_WHITE, TFT_RED);
               display->tft.fillCircle(xCLoffset - 5,colYOffset +10,10, TFT_RED);
               display->tft.drawString("!",xCLoffset - 5,colYOffset +10); 
               display->tft.setFreeFont(FMB12);
-              display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+              
             }
-            display->tft.drawString("${sub_sensor1_name}",xCol1Center ,yColHeaderCenter);
+            
 
-          // If there is an error on sensor 2, display error indicator before heading
+          // If there is an error on sensor 2, display error indicator
+            display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            display->tft.drawString("${sub_sensor2_name}",xCol2Center,yColHeaderCenter);
             if (id(sensor2HasError).state == true) {
               display->tft.setTextColor(TFT_WHITE, TFT_RED);
               display->tft.fillCircle(xRoffset - 5,colYOffset +10,10, TFT_RED);
@@ -945,8 +949,7 @@ script:
               display->tft.drawString("!",xRoffset - 5,colYOffset +10); 
               display->tft.setFreeFont(FMB12);
             }
-            display->tft.setTextColor(TFT_WHITE, TFT_BLACK);
-            display->tft.drawString("${sub_sensor2_name}",xCol2Center,yColHeaderCenter); 
+             
 
           // Build the Col1 Sensor background color
               display->tft.setFreeFont(FSB24);
