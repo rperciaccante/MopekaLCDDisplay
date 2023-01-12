@@ -787,7 +787,7 @@ script:
                   id(sensor2MACAddress).publish_state("${sub_sensor2_mac}"); 
   # ---------------------------------------------------------------------------
   - id:                                       screenTimer
-    mode:                                     restart
+    mode:                                     restart 
     then:
       - logger.log:
           format:                             "Screen timeout script called"
